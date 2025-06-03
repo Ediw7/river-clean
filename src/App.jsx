@@ -7,8 +7,11 @@ import Verifikasi from './pages/admin/Verifikasi';
 import Acara from './pages/admin/Acara';
 import Konten from './pages/admin/Konten';
 import Tantangan from './pages/admin/Tantangan';
-import Dashboard from './pages/user/Dashboard';
+import UserDashboard from './pages/user/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
+import UserLaporan from './pages/user/Laporan';
+
+
 
 function App() {
   return (
@@ -57,8 +60,29 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+
+        <Route
+          path="/user/dashboard"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <UserDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+         <Route
+          path="/user/laporan"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <UserLaporan />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
+
+
   );
 }
 
