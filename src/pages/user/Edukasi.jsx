@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import HeaderUser from '../../components/user/HeaderUser';
-import NavbarUser from '../../components/user/NavbarUser';
 import FooterUser from '../../components/user/FooterUser';
 
 export default function Edukasi() {
