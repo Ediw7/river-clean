@@ -1,12 +1,23 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FileText, Map, Calendar, Users, Trophy, Settings } from 'lucide-react';
+import {
+  LayoutDashboard,
+  FileText,
+  Map,
+  Calendar,
+  Users,
+  Trophy,
+  Settings,
+} from 'lucide-react';
 
 export default function SidebarAdmin() {
   return (
-    <aside className="w-56 bg-gray-800 text-white h-screen top-0 left-0 p-4">
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-300">Admin Menu</h2>
+    <aside className="w-60 h-screen bg-slate-950 text-white p-4 shadow-lg border-r border-slate-800">
+      <div className="mb-6 mt-6">
+        <h2 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+          Dashboard Admin
+        </h2>
       </div>
+      
       <nav className="space-y-2">
         {[
           { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -21,8 +32,10 @@ export default function SidebarAdmin() {
             key={item.name}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center space-x-2 p-2 rounded-lg transition-colors ${
-                isActive ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-blue-500 hover:text-white'
+              `flex items-center gap-3 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                isActive
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
               }`
             }
           >
