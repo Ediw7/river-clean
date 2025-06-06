@@ -3,10 +3,14 @@ import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
+
 import UserDashboard from './pages/user/Dashboard';
 import KelolaLaporan from './pages/admin/KelolaLaporan';
 import KelolaPeta from './pages/admin/KelolaPeta';
 import KelolaAcara from './pages/admin/KelolaAcara';
+import KelolaPengguna from './pages/admin/KelolaPengguna';
+
+
 import AdminDashboard from './pages/admin/Dashboard';
 import UserLaporan from './pages/user/Laporan';
 
@@ -43,11 +47,19 @@ function App() {
             </ProtectedRoute>
           }
         />
-          <Route
+        <Route
           path="/admin/acara"
           element={
             <ProtectedRoute allowedRole="admin">
               <KelolaAcara />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/pengguna"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <KelolaPengguna />
             </ProtectedRoute>
           }
         />
