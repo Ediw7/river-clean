@@ -3,11 +3,10 @@ import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
-import Verifikasi from './pages/admin/Verifikasi';
-import Acara from './pages/admin/Acara';
-import Konten from './pages/admin/Konten';
-import Tantangan from './pages/admin/Tantangan';
 import UserDashboard from './pages/user/Dashboard';
+import KelolaLaporan from './pages/admin/KelolaLaporan';
+import KelolaPeta from './pages/admin/KelolaPeta';
+
 import AdminDashboard from './pages/admin/Dashboard';
 import UserLaporan from './pages/user/Laporan';
 
@@ -29,37 +28,22 @@ function App() {
           }
         />
         <Route
-          path="/admin/verifikasi"
+          path="/admin/KelolaLaporan"
           element={
             <ProtectedRoute allowedRole="admin">
-              <Verifikasi />
+              <KelolaLaporan />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/admin/acara"
+          path="/admin/KelolaPeta"
           element={
             <ProtectedRoute allowedRole="admin">
-              <Acara />
+              <KelolaPeta />
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/admin/konten"
-          element={
-            <ProtectedRoute allowedRole="admin">
-              <Konten />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/tantangan"
-          element={
-            <ProtectedRoute allowedRole="admin">
-              <Tantangan />
-            </ProtectedRoute>
-          }
-        />
+      
 
 
         <Route
