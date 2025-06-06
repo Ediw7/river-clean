@@ -12,6 +12,7 @@ import KelolaAcara from './pages/admin/KelolaAcara';
 import TambahAcara from './pages/admin/TambahAcara';
 import KelolaPengguna from './pages/admin/KelolaPengguna';
 import KelolaTantangan from './pages/admin/KelolaTantangan';
+import TambahTantangan from './pages/admin/TambahTantangan';
 import KelolaCompanion from './pages/admin/KelolaCompanion';
 
 import UserDashboard from './pages/user/Dashboard';
@@ -94,6 +95,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="admin">
               <KelolaTantangan />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/admin/tambahtantangan"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <TambahTantangan />
             </ProtectedRoute>
           }
         />

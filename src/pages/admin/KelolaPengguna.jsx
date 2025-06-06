@@ -70,11 +70,20 @@ export default function KelolaPengguna() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="h-screen overflow-hidden bg-white relative">
+    
+    {/* Header fixed */}
+    <div className="fixed top-0 left-0 right-0 z-50">
       <HeaderAdmin />
-      <div className="flex flex-1">
+    </div>
+
+    <div className="flex pt-16 h-full">
+      {/* Sidebar fixed */}
+      <div className="fixed top-16 left-0 h-[calc(100%-4rem)] w-84 z-40">
         <SidebarAdmin />
-        <main className="ml-64 p-8 w-full">
+      </div>
+
+      <main className="ml-56 p-8 overflow-y-auto w-full relative z-10">
           <div className="max-w-6xl mx-auto">
             <h1 className="text-3xl font-bold text-[#1E40AF] mb-6">Kelola Pengguna</h1>
             {loading ? (
