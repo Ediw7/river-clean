@@ -10,6 +10,7 @@ import KelolaPeta from './pages/admin/KelolaPeta';
 import KelolaAcara from './pages/admin/KelolaAcara';
 import KelolaPengguna from './pages/admin/KelolaPengguna';
 import KelolaTantangan from './pages/admin/KelolaTantangan';
+import KelolaCompanion from './pages/admin/KelolaCompanion';
 
 
 import AdminDashboard from './pages/admin/Dashboard';
@@ -69,6 +70,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="admin">
               <KelolaTantangan />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/companion"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <KelolaCompanion />
             </ProtectedRoute>
           }
         />
