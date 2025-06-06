@@ -5,15 +5,10 @@ import HeaderUser from '../../components/user/HeaderUser';
 import NavbarUser from '../../components/user/NavbarUser';
 import FooterUser from '../../components/user/FooterUser';
 
-export default function Acara() {
+export default function PesanDigital() {
   const navigate = useNavigate();
-  const [acara, setAcara] = useState([]);
-  const [formData, setFormData] = useState({
-    judul: '',
-    lokasi: '',
-    tanggal: '',
-    deskripsi: '',
-  });
+  const [pesan, setPesan] = useState([]);
+  const [formData, setFormData] = useState({ pesan: '', lokasi: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -27,13 +22,13 @@ export default function Acara() {
 
       try {
         const { data } = await supabase
-          .from('acara_pembersihan')
+          .from('pesan_digital')
           .select('*')
-          .order('tanggal', { ascending: true });
+          .order('created_at', { ascending: false });
 
-        setAcara(data || []);
+        setPesan(data || []);
       } catch (err) {
-        setError('Gagal memuat acara: ' + err.message);
+        setError('Gagal memuat pesan: ' + err.message);
       } finally {
         setLoading(false);
       }
@@ -49,32 +44,28 @@ export default function Acara() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { error } = await supabase.from('acara_pembersihan').insert({
-        judul: formData.judul,
+      const { error } = await supabase.from('pesan_digital').insert({
+        user_id: (await supabase.auth.getUser()).data.user.id,
+        email: (await supabase.auth.getUser()).data.user.email,
+        pesan: formData.pesan,
         lokasi: formData.lokasi,
-        tanggal: formData.tanggal,
-        deskripsi: formData.deskripsi,
-        usulan_oleh: (await supabase.auth.getUser()).data.user.id,
-        status: 'pending',
       });
 
       if (error) throw error;
 
-      setAcara([
-        ...acara,
+      setPesan([
+        ...pesan,
         {
-          judul: formData.judul,
+          user_id: (await supabase.auth.getUser()).data.user.id,
+          email: (await supabase.auth.getUser()).data.user.email,
+          pesan: formData.pesan,
           lokasi: formData.lokasi,
-          tanggal: formData.tanggal,
-          deskripsi: formData.deskripsi,
-          usulan_oleh: (await supabase.auth.getUser()).data.user.id,
-          status: 'pending',
           created_at: new Date().toISOString(),
         },
       ]);
-      setFormData({ judul: '', lokasi: '', tanggal: '', deskripsi: '' });
+      setFormData({ pesan: '', lokasi: '' });
     } catch (err) {
-      setError('Gagal mengusulkan acara: ' + err.message);
+      setError('Gagal mengirim pesan: ' + err.message);
     }
   };
 
@@ -93,14 +84,13 @@ export default function Acara() {
         <NavbarUser />
         <main className="ml-0 md:ml-64 p-8 w-full">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold text-[#1E40AF] mb-6">Partisipasi Acara Pembersihan</h1>
+            <h1 className="text-3xl font-bold text-[#1E40AF] mb-6">Pesan dalam Botol Digital</h1>
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg space-y-4 mb-6">
               <div>
-                <label className="block text-gray-700">Judul</label>
-                <input
-                  type="text"
-                  name="judul"
-                  value={formData.judul}
+                <label className="block text-gray-700">Pesan</label>
+                <textarea
+                  name="pesan"
+                  value={formData.pesan}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
                   required
@@ -114,49 +104,27 @@ export default function Acara() {
                   value={formData.lokasi}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700">Tanggal</label>
-                <input
-                  type="date"
-                  name="tanggal"
-                  value={formData.tanggal}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700">Deskripsi</label>
-                <textarea
-                  name="deskripsi"
-                  value={formData.deskripsi}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
                 />
               </div>
               <button
                 type="submit"
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                Usulkan Acara
+                Kirim Pesan
               </button>
             </form>
             {loading ? (
-              <p className="text-center">Memuat acara...</p>
+              <p className="text-center">Memuat pesan...</p>
             ) : (
               <div className="bg-white p-6 rounded-lg shadow-lg">
-                {acara.length === 0 ? (
-                  <p className="text-center text-gray-500">Belum ada acara.</p>
+                {pesan.length === 0 ? (
+                  <p className="text-center text-gray-500">Belum ada pesan.</p>
                 ) : (
-                  acara.map((item) => (
+                  pesan.map((item) => (
                     <div key={item.id} className="mb-4 p-4 border rounded">
-                      <p>Judul: {item.judul}</p>
-                      <p>Lokasi: {item.lokasi}</p>
-                      <p>Tanggal: {item.tanggal}</p>
-                      <p>Status: {item.status}</p>
+                      <p>Pesan: {item.pesan}</p>
+                      <p>Lokasi: {item.lokasi || '-'}</p>
+                      <p>Oleh: {item.email}</p>
                     </div>
                   ))
                 )}

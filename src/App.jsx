@@ -4,7 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 
-import UserDashboard from './pages/user/Dashboard';
+import Dashboard from './pages/admin/Dashboard';
 import KelolaLaporan from './pages/admin/KelolaLaporan';
 import KelolaPeta from './pages/admin/KelolaPeta';
 import KelolaAcara from './pages/admin/KelolaAcara';
@@ -12,9 +12,15 @@ import KelolaPengguna from './pages/admin/KelolaPengguna';
 import KelolaTantangan from './pages/admin/KelolaTantangan';
 import KelolaCompanion from './pages/admin/KelolaCompanion';
 
-
-import AdminDashboard from './pages/admin/Dashboard';
-import UserLaporan from './pages/user/Laporan';
+import UserDashboard from './pages/user/Dashboard';
+import Edukasi from './pages/user/Edukasi';
+import Forum from './pages/user/Forum';
+import Laporan from './pages/user/Laporan';
+import Peta from './pages/user/Peta';
+import Acara from './pages/user/Acara';
+import Tantangan from './pages/user/Tantangan';
+import Companion from './pages/user/Companion';
+import PesanDigital from './pages/user/PesanDigital';
 
 
 
@@ -29,7 +35,7 @@ function App() {
           path="/admin/dashboard"
           element={
             <ProtectedRoute allowedRole="admin">
-              <AdminDashboard />
+              <Dashboard />
             </ProtectedRoute>
           }
         />
@@ -92,15 +98,77 @@ function App() {
             </ProtectedRoute>
           }
         />
-
          <Route
-          path="/user/laporan"
+          path="/user/edukasi"
           element={
             <ProtectedRoute allowedRole="user">
-              <UserLaporan />
+              <Edukasi />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/user/laporan"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <Laporan />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/peta"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <Peta />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/acara"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <Acara />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/forum"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <Forum />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/tantangan"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <Tantangan />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/companion"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <Companion />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/user/pesandigital"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <PesanDigital />
+            </ProtectedRoute>
+          }
+        />
+
+
+
+
+
+
       </Routes>
     </Router>
 

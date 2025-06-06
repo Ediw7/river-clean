@@ -20,7 +20,9 @@ import {
   Target,
   Zap
 } from 'lucide-react';
-import NavbarUser from '../../components/NavbarUser';
+import HeaderUser from '../../components/user/HeaderUser';
+import NavbarUser from '../../components/user/NavbarUser';
+import FooterUser from '../../components/user/FooterUser';
 
 
 export default function UserDashboard() {
