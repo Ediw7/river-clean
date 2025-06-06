@@ -21,7 +21,6 @@ import {
   Zap
 } from 'lucide-react';
 import HeaderUser from '../../components/user/HeaderUser';
-import NavbarUser from '../../components/user/NavbarUser';
 import FooterUser from '../../components/user/FooterUser';
 
 
@@ -82,7 +81,7 @@ export default function UserDashboard() {
             </div>
             
             <div className="flex items-center space-x-6">
-                 <NavbarUser />
+                 <HeaderUser />
 
               <div className="flex items-center space-x-4">
                 <div className="relative">

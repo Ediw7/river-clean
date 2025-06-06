@@ -20,7 +20,6 @@ export default function Edukasi() {
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <HeaderUser />
       <div className="flex flex-1">
-        <NavbarUser />
         <main className="ml-0 md:ml-64 p-8 w-full">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl font-bold text-[#1E40AF] mb-6">Edukasi Sungai</h1>

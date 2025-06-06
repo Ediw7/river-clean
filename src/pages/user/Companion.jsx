@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import HeaderUser from '../../components/user/HeaderUser';
-import NavbarUser from '../../components/user/NavbarUser';
 import FooterUser from '../../components/user/FooterUser';
 
 export default function Companion() {
@@ -72,7 +71,6 @@ export default function Companion() {
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <HeaderUser />
       <div className="flex flex-1">
-        <NavbarUser />
         <main className="ml-0 md:ml-64 p-8 w-full">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl font-bold text-[#1E40AF] mb-6">Sungai Virtual Pet</h1>
