@@ -6,7 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import UserDashboard from './pages/user/Dashboard';
 import KelolaLaporan from './pages/admin/KelolaLaporan';
 import KelolaPeta from './pages/admin/KelolaPeta';
-
+import KelolaAcara from './pages/admin/KelolaAcara';
 import AdminDashboard from './pages/admin/Dashboard';
 import UserLaporan from './pages/user/Laporan';
 
@@ -28,7 +28,7 @@ function App() {
           }
         />
         <Route
-          path="/admin/KelolaLaporan"
+          path="/admin/laporan"
           element={
             <ProtectedRoute allowedRole="admin">
               <KelolaLaporan />
@@ -36,10 +36,18 @@ function App() {
           }
         />
         <Route
-          path="/admin/KelolaPeta"
+          path="/admin/peta"
           element={
             <ProtectedRoute allowedRole="admin">
               <KelolaPeta />
+            </ProtectedRoute>
+          }
+        />
+          <Route
+          path="/admin/acara"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <KelolaAcara />
             </ProtectedRoute>
           }
         />
