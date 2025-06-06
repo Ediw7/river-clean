@@ -1,15 +1,22 @@
+import { useNavigate } from 'react-router-dom'; 
 import { Droplets, LogOut } from 'lucide-react';
+import { supabase } from '../../lib/supabase'; 
 
 export default function HeaderAdmin() {
+  const navigate = useNavigate(); 
+
   const handleLogout = async () => {
-    // await supabase.auth.signOut();
-    // navigate('/');
-    console.log('Logout clicked');
+    try {
+      await supabase.auth.signOut(); 
+      navigate('/login'); 
+    } catch (error) {
+      console.error('Logout failed:', error.message); 
+    }
   };
 
   return (
     <header className="bg-slate-950/90 backdrop-blur-md border-b border-slate-800/50 text-white p-4 flex justify-between items-center shadow-xl relative overflow-hidden">
-      {/* Animated background elements */}
+
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
         <div className="absolute top-0 left-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl animate-pulse"></div>
         <div className="absolute top-0 right-10 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl animate-pulse delay-1000"></div>
