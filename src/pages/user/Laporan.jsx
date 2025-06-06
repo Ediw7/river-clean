@@ -51,14 +51,24 @@ export default function Laporan() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null); // Reset error sebelum mencoba lagi
     try {
       let fotoUrl = null;
       if (formData.foto) {
         const { data, error: uploadError } = await supabase.storage
+          .from('laporan') // Pastikan nama bucket sesuai
+          .upload(`${Date.now()}_${formData.foto.name}`, formData.foto, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          throw new Error(uploadError.message || 'Gagal mengunggah foto');
+        }
+
+        fotoUrl = supabase.storage
           .from('laporan')
-          .upload(`${Date.now()}_${formData.foto.name}`, formData.foto);
-        if (uploadError) throw uploadError;
-        fotoUrl = `${supabase.storage.from('laporan').getPublicUrl(data.path).data.publicUrl}`;
+          .getPublicUrl(data.path).data.publicUrl;
       }
 
       const { error } = await supabase.from('laporan_pencemaran').insert({
@@ -88,7 +98,7 @@ export default function Laporan() {
       ]);
       setFormData({ foto: null, deskripsi: '', lokasi: '', jenis_sampah: '' });
     } catch (err) {
-      setError('Gagal mengirim laporan: ' + err.message);
+      setError(`Gagal mengirim laporan: ${err.message}`);
     }
   };
 
@@ -96,6 +106,12 @@ export default function Laporan() {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <p className="text-red-500">{error}</p>
+        <button
+          onClick={() => setError(null)}
+          className="ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Coba Lagi
+        </button>
       </div>
     );
   }

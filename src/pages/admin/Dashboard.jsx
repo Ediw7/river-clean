@@ -71,41 +71,51 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      <HeaderAdmin />
-      <div className="flex flex-1">
-        <SidebarAdmin />
-        <main className="ml-64 p-8 w-full">
-          <div className="max-w-4xl mx-auto">
+    <div className="h-screen overflow-hidden">
+      {/* Header fixed */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <HeaderAdmin />
+      </div>
+
+      <div className="flex pt-16 h-full">
+        {/* Sidebar fixed */}
+        <div className="fixed top-16 left-0 h-[calc(100%-4rem)] w-84 z-40">
+          <SidebarAdmin />
+        </div>
+
+        {/* Konten utama scrollable */}
+        <main className="ml-56 pt-6 pb-16 px-8 w-full overflow-y-auto h-full">
+          <div className="max-w-6xl mx-auto">
             <h1 className="text-3xl font-bold text-[#1E40AF] mb-6">Admin Dashboard</h1>
             <p className="text-gray-700 mb-4">Selamat datang di dashboard admin River Clean!</p>
             {loading ? (
               <p className="text-center">Memuat data...</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                {/* Kartu stat */}
+                <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
                   <h2 className="text-xl font-semibold text-gray-800">Laporan</h2>
-                  <p className="text-3xl text-[#16A34A] font-bold mt-2">{stats.laporan}</p>
+                  <p className="text-3xl text-green-600 font-bold mt-2">{stats.laporan}</p>
                   <p className="text-sm text-gray-500">Laporan pencemaran menunggu</p>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
                   <h2 className="text-xl font-semibold text-gray-800">Acara</h2>
-                  <p className="text-3xl text-[#16A34A] font-bold mt-2">{stats.acara}</p>
+                  <p className="text-3xl text-green-600 font-bold mt-2">{stats.acara}</p>
                   <p className="text-sm text-gray-500">Acara pembersihan terjadwal</p>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
                   <h2 className="text-xl font-semibold text-gray-800">Pengguna</h2>
-                  <p className="text-3xl text-[#16A34A] font-bold mt-2">{stats.pengguna}</p>
+                  <p className="text-3xl text-green-600 font-bold mt-2">{stats.pengguna}</p>
                   <p className="text-sm text-gray-500">Pengguna terdaftar</p>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
                   <h2 className="text-xl font-semibold text-gray-800">Tantangan</h2>
-                  <p className="text-3xl text-[#16A34A] font-bold mt-2">{stats.tantangan}</p>
+                  <p className="text-3xl text-green-600 font-bold mt-2">{stats.tantangan}</p>
                   <p className="text-sm text-gray-500">Tantangan aktif</p>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
                   <h2 className="text-xl font-semibold text-gray-800">River Companion</h2>
-                  <p className="text-3xl text-[#16A34A] font-bold mt-2">{stats.companion}</p>
+                  <p className="text-3xl text-green-600 font-bold mt-2">{stats.companion}</p>
                   <p className="text-sm text-gray-500">Peliharaan virtual aktif</p>
                 </div>
               </div>
@@ -113,7 +123,11 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
-      <FooterAdmin />
+
+    
+      {/* <div className="fixed bottom-0 left-0 right-0 z-50">
+        <FooterAdmin />
+      </div> */}
     </div>
   );
 }

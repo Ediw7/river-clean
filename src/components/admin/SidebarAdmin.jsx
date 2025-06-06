@@ -3,7 +3,7 @@ import { LayoutDashboard, FileText, Map, Calendar, Users, Trophy, Settings } fro
 
 export default function SidebarAdmin() {
   return (
-    <aside className="w-64 bg-gray-800 text-white h-screen fixed top-0 left-0 p-4">
+    <aside className="w-56 bg-gray-800 text-white h-screen top-0 left-0 p-4">
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-gray-300">Admin Menu</h2>
       </div>

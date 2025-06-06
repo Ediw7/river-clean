@@ -7,6 +7,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/admin/Dashboard';
 import KelolaLaporan from './pages/admin/KelolaLaporan';
 import KelolaPeta from './pages/admin/KelolaPeta';
+import TambahPeta from './pages/admin/TambahPeta';
 import KelolaAcara from './pages/admin/KelolaAcara';
 import KelolaPengguna from './pages/admin/KelolaPengguna';
 import KelolaTantangan from './pages/admin/KelolaTantangan';
@@ -52,6 +53,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="admin">
               <KelolaPeta />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/tambahpeta"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <TambahPeta />
             </ProtectedRoute>
           }
         />
