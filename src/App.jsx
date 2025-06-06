@@ -9,6 +9,7 @@ import KelolaLaporan from './pages/admin/KelolaLaporan';
 import KelolaPeta from './pages/admin/KelolaPeta';
 import KelolaAcara from './pages/admin/KelolaAcara';
 import KelolaPengguna from './pages/admin/KelolaPengguna';
+import KelolaTantangan from './pages/admin/KelolaTantangan';
 
 
 import AdminDashboard from './pages/admin/Dashboard';
@@ -60,6 +61,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="admin">
               <KelolaPengguna />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/tantangan"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <KelolaTantangan />
             </ProtectedRoute>
           }
         />
