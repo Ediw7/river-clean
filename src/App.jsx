@@ -9,6 +9,7 @@ import KelolaLaporan from './pages/admin/KelolaLaporan';
 import KelolaPeta from './pages/admin/KelolaPeta';
 import TambahPeta from './pages/admin/TambahPeta';
 import KelolaAcara from './pages/admin/KelolaAcara';
+import TambahAcara from './pages/admin/TambahAcara';
 import KelolaPengguna from './pages/admin/KelolaPengguna';
 import KelolaTantangan from './pages/admin/KelolaTantangan';
 import KelolaCompanion from './pages/admin/KelolaCompanion';
@@ -69,6 +70,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="admin">
               <KelolaAcara />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/tambahacara"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <TambahAcara />
             </ProtectedRoute>
           }
         />
