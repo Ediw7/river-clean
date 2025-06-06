@@ -59,7 +59,7 @@ export default function TambahPeta() {
         longitude: parseFloat(formData.longitude),
       }]);
       if (error) throw error;
-      navigate('/admin/kelolapeta', { state: { success: 'Lokasi berhasil ditambahkan!' } });
+      navigate('/admin/peta', { state: { success: 'Lokasi berhasil ditambahkan!' } });
     } catch (err) {
       setError('Gagal menambahkan data: ' + err.message);
     }
@@ -167,7 +167,7 @@ export default function TambahPeta() {
                 <div className="flex justify-end space-x-2">
                   <button
                     type="button"
-                    onClick={() => navigate('/admin/kelolapeta')}
+                    onClick={() => navigate('/admin/peta')}
                     className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
                   >
                     Batal
