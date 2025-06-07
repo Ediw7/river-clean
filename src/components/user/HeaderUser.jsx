@@ -19,7 +19,6 @@ export default function HeaderUser() {
   };
 
   const navItems = [
-    { name: 'Edukasi', icon: BookOpen, path: '/user/edukasi' },
     { name: 'Forum', icon: MessageCircle, path: '/user/forum' },
     { name: 'Laporan', icon: Camera, path: '/user/laporan' },
     { name: 'Peta', icon: MapPin, path: '/user/peta' },
