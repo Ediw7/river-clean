@@ -330,7 +330,7 @@ export default function KelolaPeta() {
         </button>
         <button
           onClick={() => handleEdit(editModal.data.id, editModal.data)}
-          className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
+          className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
         >
           Simpan
         </button>
