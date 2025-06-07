@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import HeaderAdmin from '../../components/admin/HeaderAdmin';
 import SidebarAdmin from '../../components/admin/SidebarAdmin';
 import FooterAdmin from '../../components/admin/FooterAdmin';
+import { Fish, Edit, Trash2 } from 'lucide-react';
 
 export default function KelolaCompanion() {
   const navigate = useNavigate();
@@ -151,48 +152,67 @@ export default function KelolaCompanion() {
 
   if (error && !error.includes('berhasil')) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-red-500">{error}</p>
-        <button onClick={() => navigate('/login')} className="ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-          Login
-        </button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-blue-50/30 to-cyan-50/50 flex items-center justify-center">
+        <div className="text-center p-8 bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Fish className="w-8 h-8 text-red-600" />
+          </div>
+          <p className="text-red-600 mb-4 font-medium">{error}</p>
+          <button
+            onClick={() => navigate('/login')}
+            className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl hover:scale-105 transition-all duration-300 font-medium"
+          >
+            Login
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="h-screen overflow-hidden bg-white relative">
-    
-    {/* Header fixed */}
-    <div className="fixed top-0 left-0 right-0 z-50">
-      <HeaderAdmin />
-    </div>
-
-    <div className="flex pt-16 h-full">
-      {/* Sidebar fixed */}
-      <div className="fixed top-16 left-0 h-[calc(100%-4rem)] w-84 z-40">
-        <SidebarAdmin />
+      {/* Header fixed */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <HeaderAdmin />
       </div>
 
-      <main className="ml-56 p-8 overflow-y-auto w-full relative z-10">
-          <div className="max-w-6xl w-full">
-            <h1 className="text-4xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500 mb-8">
-              Kelola Companion Keren
-            </h1>
+      <div className="flex pt-16 h-full">
+        {/* Sidebar fixed */}
+        <div className="fixed top-16 left-0 h-[calc(100%-4rem)] w-84 z-40">
+          <SidebarAdmin />
+        </div>
+
+        <main className="ml-56 pt-6 pb-16 px-8 w-full overflow-y-auto h-full bg-gradient-to-br from-slate-50/50 via-blue-50/30 to-cyan-50/50">
+          <div className="max-w-6xl mx-auto">
+            {/* Header Section */}
+            <div className="mb-8">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-green-600 rounded-xl flex items-center justify-center">
+                  <Fish className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                    Kelola Companion Keren
+                  </h1>
+                  <p className="text-slate-600">Atur dan kelola companion pengguna.</p>
+                </div>
+              </div>
+            </div>
+
             {error && error.includes('berhasil') && (
               <p className="text-center text-green-600 mb-4 font-semibold animate-pulse">{error}</p>
             )}
             {/* Form Tambah Companion */}
-            <div className="bg-white rounded-xl shadow-2xl p-6 mb-8 transform hover:scale-105 transition duration-300">
+            <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg p-6 mb-8 transform hover:scale-[1.02] transition duration-300">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Tambah Companion Baru</h2>
               <div className="flex flex-col md:flex-row gap-8">
-                <form onSubmit={handleSubmit} className="w-full md:w-1/2 bg-gray-50 p-6 rounded-lg shadow-inner">
+                <form onSubmit={handleSubmit} className="w-full md:w-1/2 bg-gray-50/80 p-6 rounded-xl shadow-inner">
                   <div className="mb-4">
-                    <label className="block text-gray-700 text-lg mb-2">Pilih Pengguna</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Pilih Pengguna</label>
                     <select
                       value={formData.user_id}
                       onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
                       required
                     >
                       <option value="">Pilih Pengguna</option>
@@ -202,55 +222,55 @@ export default function KelolaCompanion() {
                     </select>
                   </div>
                   <div className="mb-4">
-                    <label className="block text-gray-700 text-lg mb-2">Nama Companion</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Nama Companion</label>
                     <input
                       type="text"
                       value={formData.nama}
                       onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
                       placeholder="Contoh: Ikan Emas"
                       required
                     />
                   </div>
                   <div className="mb-4">
-                    <label className="block text-gray-700 text-lg mb-2">Jenis Companion</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Jenis Companion</label>
                     <select
                       value={formData.jenis}
                       onChange={(e) => setFormData({ ...formData, jenis: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
                     >
                       <option value="ikan">Ikan</option>
                       <option value="katak">Katak</option>
                     </select>
                   </div>
                   <div className="mb-4">
-                    <label className="block text-gray-700 text-lg mb-2">Kesehatan (0-100)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Kesehatan (0-100)</label>
                     <input
                       type="number"
                       value={formData.kesehatan}
                       onChange={(e) => setFormData({ ...formData, kesehatan: Math.min(100, Math.max(0, e.target.value)) })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
                       min="0"
                       max="100"
                       required
                     />
                   </div>
                   <div className="mb-4">
-                    <label className="block text-gray-700 text-lg mb-2">Warna (Opsional)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Warna (Opsional)</label>
                     <input
                       type="text"
                       value={formData.warna}
                       onChange={(e) => setFormData({ ...formData, warna: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
                       placeholder="Contoh: Merah, Biru"
                     />
                   </div>
                   <div className="mb-4">
-                    <label className="block text-gray-700 text-lg mb-2">Emoticon</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Emoticon</label>
                     <select
                       value={formData.emoticon}
                       onChange={(e) => setFormData({ ...formData, emoticon: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
                     >
                       <option value="🐟">🐟 (Ikan)</option>
                       <option value="🐠">🐠 (Ikan Tropis)</option>
@@ -262,23 +282,17 @@ export default function KelolaCompanion() {
                     </select>
                   </div>
                   <div className="flex justify-end space-x-4">
-                    <button
-                      type="button"
-                      onClick={() => navigate('/admin/companion')}
-                      className="px-6 py-3 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition duration-300"
-                    >
-                      Kembali
-                    </button>
+                    
                     <button
                       type="submit"
-                      className="px-6 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg hover:from-green-600 hover:to-blue-700 transition duration-300 transform hover:scale-105"
+                      className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-500/25"
                     >
                       Tambah Companion
                     </button>
                   </div>
                 </form>
                 <div className="w-full md:w-1/2 flex items-center justify-center">
-                  <div className="relative w-64 h-64 bg-gradient-to-br from-blue-100 to-green-100 rounded-full shadow-lg p-4 flex items-center justify-center">
+                  <div className="relative w-64 h-64 bg-gradient-to-br from-blue-100 to-green-100 rounded-xl shadow-lg p-4 flex items-center justify-center">
                     <span className="text-8xl animate-bounce">{formData.emoticon}</span>
                     <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center text-gray-700 font-semibold">
                       {formData.nama || 'Nama Companion'}
@@ -288,18 +302,23 @@ export default function KelolaCompanion() {
               </div>
             </div>
             {/* Daftar Companion */}
-            <div className="bg-white rounded-xl shadow-2xl p-6">
+            <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Daftar Companion</h2>
               {companions.length === 0 ? (
-                <p className="text-center text-gray-500">Belum ada companion yang ditambahkan.</p>
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Fish className="w-8 h-8 text-cyan-600" />
+                  </div>
+                  <p className="text-slate-500 text-lg">Belum ada companion yang ditambahkan.</p>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {companions.map((comp) => (
                     <div
                       key={comp.id}
-                      className="bg-gradient-to-br from-blue-50 to-green-50 rounded-lg shadow-md p-4 hover:shadow-xl transition duration-300 transform hover:-translate-y-2"
+                      className="bg-gradient-to-br from-blue-50/70 to-green-50/70 rounded-lg shadow-md p-4 hover:shadow-xl transition duration-300 transform hover:-translate-y-2"
                     >
-                      <div className="w-full h-40 flex items-center justify-center bg-gray-100 rounded-lg">
+                      <div className="w-full h-40 flex items-center justify-center bg-gray-100/80 rounded-lg">
                         <span className="text-6xl">{comp.emoticon}</span>
                       </div>
                       <h3 className="text-xl font-semibold text-gray-800 mt-2">{comp.nama}</h3>
@@ -310,15 +329,17 @@ export default function KelolaCompanion() {
                       <div className="mt-4 flex justify-between">
                         <button
                           onClick={() => setEditData(comp)}
-                          className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition duration-200"
+                          className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/25 flex items-center space-x-1"
                         >
-                          Edit
+                          <Edit className="w-4 h-4" />
+                          <span>Edit</span>
                         </button>
                         <button
                           onClick={() => handleDelete(comp.id)}
-                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
+                          className="px-3 py-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-600/25 flex items-center space-x-1"
                         >
-                          Hapus
+                          <Trash2 className="w-4 h-4" />
+                          <span>Hapus</span>
                         </button>
                       </div>
                     </div>
@@ -331,82 +352,117 @@ export default function KelolaCompanion() {
       </div>
       <FooterAdmin />
       {editData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">Edit Companion</h2>
-            <select
-              value={editData.user_id}
-              onChange={(e) => setEditData({ ...editData, user_id: e.target.value })}
-              className="w-full p-2 mb-2 border rounded"
-              required
-            >
-              <option value="">Pilih Pengguna</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>{user.email}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              value={editData.nama}
-              onChange={(e) => setEditData({ ...editData, nama: e.target.value })}
-              className="w-full p-2 mb-2 border rounded"
-              placeholder="Nama Companion"
-              required
-            />
-            <select
-              value={editData.jenis}
-              onChange={(e) => setEditData({ ...editData, jenis: e.target.value })}
-              className="w-full p-2 mb-2 border rounded"
-            >
-              <option value="ikan">Ikan</option>
-              <option value="katak">Katak</option>
-            </select>
-            <input
-              type="number"
-              value={editData.kesehatan}
-              onChange={(e) => setEditData({ ...editData, kesehatan: Math.min(100, Math.max(0, e.target.value)) })}
-              className="w-full p-2 mb-2 border rounded"
-              min="0"
-              max="100"
-              required
-            />
-            <input
-              type="text"
-              value={editData.warna || ''}
-              onChange={(e) => setEditData({ ...editData, warna: e.target.value })}
-              className="w-full p-2 mb-2 border rounded"
-              placeholder="Warna (Opsional)"
-            />
-            <select
-              value={editData.emoticon}
-              onChange={(e) => setEditData({ ...editData, emoticon: e.target.value })}
-              className="w-full p-2 mb-2 border rounded"
-            >
-              <option value="🐟">🐟 (Ikan)</option>
-              <option value="🐠">🐠 (Ikan Tropis)</option>
-              <option value="🦈">🦈 (Hiu)</option>
-              <option value="🐸">🐸 (Katak)</option>
-              <option value="🐢">🐢 (Kura-kura)</option>
-              <option value="🦎">🦎 (Kadal)</option>
-              <option value="🐾">🐾 (Default)</option>
-            </select>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setEditData(null)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Batal
-              </button>
-              <button
-                onClick={() => handleEdit(editData.id, editData)}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Simpan
-              </button>
-            </div>
-          </div>
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-white/70 backdrop-blur-sm p-6 rounded-2xl shadow-lg w-full max-w-3xl border border-white/50">
+      <div className="flex items-center space-x-3 mb-6">
+        <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
+          <Edit className="w-5 h-5 text-white" />
         </div>
-      )}
+        <h2 className="text-xl font-semibold text-slate-800">Edit Companion</h2>
+      </div>
+
+      {/* Grid Layout untuk Form */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Pilih Pengguna</label>
+          <select
+            value={editData.user_id}
+            onChange={(e) => setEditData({ ...editData, user_id: e.target.value })}
+            className="w-full p-3 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+            required
+          >
+            <option value="">Pilih Pengguna</option>
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>{user.email}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Nama Companion</label>
+          <input
+            type="text"
+            value={editData.nama}
+            onChange={(e) => setEditData({ ...editData, nama: e.target.value })}
+            className="w-full p-3 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+            placeholder="Nama Companion"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Jenis Companion</label>
+          <select
+            value={editData.jenis}
+            onChange={(e) => setEditData({ ...editData, jenis: e.target.value })}
+            className="w-full p-3 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+          >
+            <option value="ikan">Ikan</option>
+            <option value="katak">Katak</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Kesehatan (0-100)</label>
+          <input
+            type="number"
+            value={editData.kesehatan}
+            onChange={(e) => setEditData({ ...editData, kesehatan: Math.min(100, Math.max(0, e.target.value)) })}
+            className="w-full p-3 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+            min="0"
+            max="100"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Warna (Opsional)</label>
+          <input
+            type="text"
+            value={editData.warna || ''}
+            onChange={(e) => setEditData({ ...editData, warna: e.target.value })}
+            className="w-full p-3 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+            placeholder="Warna (Opsional)"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Emoticon</label>
+          <select
+            value={editData.emoticon}
+            onChange={(e) => setEditData({ ...editData, emoticon: e.target.value })}
+            className="w-full p-3 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+          >
+            <option value="🐟">🐟 (Ikan)</option>
+            <option value="🐠">🐠 (Ikan Tropis)</option>
+            <option value="🦈">🦈 (Hiu)</option>
+            <option value="🐸">🐸 (Katak)</option>
+            <option value="🐢">🐢 (Kura-kura)</option>
+            <option value="🦎">🦎 (Kadal)</option>
+            <option value="🐾">🐾 (Default)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Tombol Aksi */}
+      <div className="flex justify-end space-x-3 mt-6">
+        <button
+          onClick={() => setEditData(null)}
+          className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-300"
+        >
+          Batal
+        </button>
+        <button
+          onClick={() => handleEdit(editData.id, editData)}
+          className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
+        >
+          Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
