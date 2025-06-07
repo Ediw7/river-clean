@@ -19,13 +19,13 @@ export default function HeaderUser() {
   };
 
   const navItems = [
-    { name: 'Forum', icon: MessageCircle, path: '/user/forum' },
     { name: 'Laporan', icon: Camera, path: '/user/laporan' },
     { name: 'Peta', icon: MapPin, path: '/user/peta' },
     { name: 'Acara', icon: BookOpen, path: '/user/acara' },
+    { name: 'Tantangan', icon: MapPin, path: '/user/tantangan' },
     { name: 'Companion', icon: MessageCircle, path: '/user/companion' },
     { name: 'PesanDigital', icon: Camera, path: '/user/pesandigital' },
-    { name: 'Tantangan', icon: MapPin, path: '/user/tantangan' },
+    { name: 'Forum', icon: MessageCircle, path: '/user/forum' },
   ];
 
   return (
