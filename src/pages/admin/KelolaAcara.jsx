@@ -4,14 +4,14 @@ import { supabase } from '../../lib/supabase';
 import HeaderAdmin from '../../components/admin/HeaderAdmin';
 import SidebarAdmin from '../../components/admin/SidebarAdmin';
 import FooterAdmin from '../../components/admin/FooterAdmin';
-import { Calendar, MapPin, Image, Edit, Trash2, Clock, Phone, AlertTriangle } from 'lucide-react'; // Tambah AlertTriangle
+import { Calendar, MapPin, Image, Edit, Trash2, Clock, Phone, Link, AlertTriangle } from 'lucide-react'; // Tambah Link icon
 
 export default function KelolaAcara() {
   const navigate = useNavigate();
   const [acara, setAcara] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editModal, setEditModal] = useState({ open: false, data: null, newPosterFile: null }); // State untuk modal edit
+  const [editModal, setEditModal] = useState({ open: false, data: null, newPosterFile: null });
 
   // Fungsi untuk mengambil data acara dari Supabase
   const fetchAcara = useCallback(async () => {
@@ -19,7 +19,7 @@ export default function KelolaAcara() {
     try {
       const { data, error: fetchError } = await supabase
         .from('acara_pembersihan')
-        .select('*')
+        .select('*') // Ambil semua kolom, termasuk link_pendaftaran
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
@@ -30,7 +30,7 @@ export default function KelolaAcara() {
     } finally {
       setLoading(false);
     }
-  }, []); // Dependensi kosong, hanya dijalankan sekali saat mount
+  }, []);
 
   // Check autentikasi dan panggil fetchAcara
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function KelolaAcara() {
           return;
         }
 
-        await fetchAcara(); // Panggil fetch data setelah auth berhasil
+        await fetchAcara();
 
       } catch (err) {
         setError('Gagal memverifikasi role admin atau memuat data: ' + err.message);
@@ -64,19 +64,18 @@ export default function KelolaAcara() {
     };
 
     checkAuthAndFetch();
-  }, [navigate, fetchAcara]); // fetchAcara sebagai dependency
+  }, [navigate, fetchAcara]);
 
   // Handler untuk mengedit acara
   const handleEdit = async () => {
-    const { id, judul, lokasi, tanggal, waktu, no_cp, deskripsi, poster_url, newPosterFile } = editModal.data;
-    const originalAcara = [...acara]; // Simpan state asli untuk rollback
+    const { id, judul, lokasi, tanggal, waktu, no_cp, deskripsi, poster_url, link_pendaftaran, newPosterFile } = editModal.data;
+    const originalAcara = [...acara];
 
-    // Optimistic UI Update (update data di frontend sementara)
+    // Optimistic UI Update
     const updatedAcaraItem = {
       ...editModal.data,
       updated_at: new Date().toISOString(),
     };
-    // Jika ada file poster baru, buat URL preview sementara
     if (newPosterFile) {
         updatedAcaraItem.poster_url = URL.createObjectURL(newPosterFile);
     }
@@ -86,37 +85,31 @@ export default function KelolaAcara() {
         item.id === id ? { ...item, ...updatedAcaraItem } : item
       )
     );
-    setEditModal({ open: false, data: null, newPosterFile: null }); // Tutup modal segera
+    setEditModal({ open: false, data: null, newPosterFile: null });
 
     try {
       let finalPosterUrl = poster_url;
       if (newPosterFile) {
-        // Upload poster baru ke Supabase Storage
         const fileExtension = newPosterFile.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExtension}`; // Nama file unik
-        const filePath = `posters/${fileName}`; // Folder 'posters' di bucket Anda
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
+        const filePath = `posters/${fileName}`;
 
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('acara-posters') // Ganti dengan nama bucket storage Anda
-          .upload(filePath, newPosterFile, {
-            cacheControl: '3600',
-            upsert: false // Jangan menimpa jika nama file sudah ada (gunakan nama unik)
-          });
+          .from('acara-posters')
+          .upload(filePath, newPosterFile, { cacheControl: '3600', upsert: false });
 
         if (uploadError) {
           console.error('Supabase Storage Upload Error:', uploadError);
           throw new Error('Gagal mengunggah poster baru: ' + uploadError.message);
         }
 
-        // Dapatkan URL publik dari poster yang baru diunggah
         const { data: publicUrlData } = supabase.storage
           .from('acara-posters')
           .getPublicUrl(filePath);
         finalPosterUrl = publicUrlData.publicUrl;
 
-        // Jika ada poster lama dan berhasil diunggah poster baru, hapus poster lama dari storage
-        if (poster_url && poster_url.includes('acara-posters')) { // Pastikan URL memang dari bucket Anda
-            const oldFileNameWithFolder = poster_url.split('/public/acara-posters/')[1]; // Ambil path relatif
+        if (poster_url && poster_url.includes('acara-posters')) {
+            const oldFileNameWithFolder = poster_url.split('/public/acara-posters/')[1];
             const { error: deleteError } = await supabase.storage.from('acara-posters').remove([oldFileNameWithFolder]);
             if (deleteError) {
                 console.warn('Gagal menghapus poster lama dari storage:', deleteError.message);
@@ -124,17 +117,17 @@ export default function KelolaAcara() {
         }
       }
 
-      // Update data acara di database
       const { error: updateError } = await supabase
         .from('acara_pembersihan')
         .update({
           judul,
           lokasi,
           tanggal,
-          waktu: waktu || null, // Pastikan waktu bisa null
-          no_cp: no_cp || null, // Pastikan no_cp bisa null
+          waktu: waktu || null,
+          no_cp: no_cp || null,
           deskripsi,
-          poster_url: finalPosterUrl, // Gunakan URL poster final
+          poster_url: finalPosterUrl,
+          link_pendaftaran: link_pendaftaran || null, // Update field ini
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);
@@ -147,17 +140,15 @@ export default function KelolaAcara() {
         throw updateError;
       }
 
-      // Final update UI setelah poster_url diketahui (jika ada upload baru)
       setAcara(prevAcara =>
         prevAcara.map(item =>
-          item.id === id ? { ...item, poster_url: finalPosterUrl, updated_at: new Date().toISOString() } : item
+          item.id === id ? { ...item, poster_url: finalPosterUrl, updated_at: new Date().toISOString(), link_pendaftaran: link_pendaftaran } : item
         )
       );
 
     } catch (err) {
       setError('Gagal mengedit acara: ' + err.message);
-      setAcara(originalAcara); // Rollback UI jika terjadi error
-      // Buka kembali modal dengan data asli jika gagal
+      setAcara(originalAcara);
       setEditModal({ open: true, data: originalAcara.find(item => item.id === id), newPosterFile: null });
     }
   };
@@ -165,15 +156,13 @@ export default function KelolaAcara() {
   // Handler untuk menghapus acara
   const handleDelete = async (id, posterUrl) => {
     if (window.confirm('Yakin ingin menghapus acara ini?')) {
-      const originalAcara = [...acara]; // Simpan state asli
+      const originalAcara = [...acara];
 
-      // Optimistic UI Update: Hapus dari daftar di frontend
       setAcara(prevAcara => prevAcara.filter(item => item.id !== id));
 
       try {
-        // Hapus poster dari storage jika ada dan merupakan URL dari bucket Anda
         if (posterUrl && posterUrl.includes('acara-posters')) {
-          const fileNameWithFolder = posterUrl.split('/public/acara-posters/')[1]; // Ambil path relatif
+          const fileNameWithFolder = posterUrl.split('/public/acara-posters/')[1];
           const { error: storageError } = await supabase.storage.from('acara-posters').remove([fileNameWithFolder]);
           if (storageError) {
             console.warn('Gagal menghapus poster dari storage:', storageError.message);
@@ -190,7 +179,7 @@ export default function KelolaAcara() {
         }
       } catch (err) {
         setError('Gagal menghapus acara: ' + err.message);
-        setAcara(originalAcara); // Rollback UI
+        setAcara(originalAcara);
       }
     }
   };
@@ -200,7 +189,7 @@ export default function KelolaAcara() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-blue-50/30 to-cyan-50/50 flex items-center justify-center">
         <div className="text-center p-8 bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle className="w-8 h-8 text-red-600" /> {/* Menggunakan AlertTriangle */}
+            <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
           <p className="text-red-600 mb-4 font-medium">{error}</p>
           <button
@@ -216,20 +205,17 @@ export default function KelolaAcara() {
 
   return (
     <div className="h-screen overflow-hidden bg-white relative">
-      {/* Header fixed */}
       <div className="fixed top-0 left-0 right-0 z-50">
         <HeaderAdmin />
       </div>
 
       <div className="flex pt-16 h-full">
-        {/* Sidebar fixed */}
         <div className="fixed top-16 left-0 h-[calc(100%-4rem)] w-84 z-40">
           <SidebarAdmin />
         </div>
 
         <main className="ml-56 pt-6 pb-16 px-8 w-full overflow-y-auto h-full bg-gradient-to-br from-slate-50/50 via-blue-50/30 to-cyan-50/50">
           <div className="max-w-6xl mx-auto">
-            {/* Header Section */}
             <div className="mb-8">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
@@ -244,7 +230,7 @@ export default function KelolaAcara() {
               </div>
               <button
                 onClick={() => navigate('/admin/tambahacara')}
-                className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl hover:scale-105 transition-all duration-300 font-medium shadow-lg hover:shadow-cyan-500/25" // Gunakan cyan-blue gradient
+                className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl hover:scale-105 transition-all duration-300 font-medium shadow-lg hover:shadow-cyan-500/25"
               >
                 Tambah Acara
               </button>
@@ -268,7 +254,7 @@ export default function KelolaAcara() {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full text-left"> {/* Tambah min-w-full */}
+                    <table className="min-w-full text-left">
                       <thead>
                         <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
                           <th className="p-4 font-semibold text-slate-700">Judul</th>
@@ -276,6 +262,7 @@ export default function KelolaAcara() {
                           <th className="p-4 font-semibold text-slate-700">Tanggal</th>
                           <th className="p-4 font-semibold text-slate-700">Waktu</th>
                           <th className="p-4 font-semibold text-slate-700">No. CP</th>
+                          <th className="p-4 font-semibold text-slate-700">Link Pendaftaran</th> {/* Tambah header */}
                           <th className="p-4 font-semibold text-slate-700">Deskripsi</th>
                           <th className="p-4 font-semibold text-slate-700">Poster</th>
                           <th className="p-4 font-semibold text-slate-700">Aksi</th>
@@ -291,27 +278,39 @@ export default function KelolaAcara() {
                           >
                             <td className="p-4 text-slate-700 whitespace-nowrap">{item.judul}</td>
                             <td className="p-4 text-slate-700">
-                              <div className="flex items-center space-x-2 whitespace-nowrap"> 
+                              <div className="flex items-center space-x-2 whitespace-nowrap">
                                 <MapPin className="w-4 h-4 text-slate-500" />
                                 <span>{item.lokasi}</span>
                               </div>
                             </td>
-                            <td className="p-4 text-slate-700 whitespace-nowrap">
-                              {new Date(item.tanggal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
-                            </td>
-                      
-                            <td className="p-4 text-slate-700"> 
-                              <div className="flex items-center space-x-2 whitespace-nowrap"> 
+                            <td className="p-4 text-slate-700 whitespace-nowrap">{new Date(item.tanggal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</td>
+                            <td className="p-4 text-slate-700">
+                              <div className="flex items-center space-x-2 whitespace-nowrap">
                                 <Clock className="w-4 h-4 text-slate-500" />
                                 <span>{item.waktu ? item.waktu.substring(0, 5) : '-'}</span>
                               </div>
                             </td>
-                   
                             <td className="p-4 text-slate-700">
-                              <div className="flex items-center space-x-2 whitespace-nowrap"> 
+                              <div className="flex items-center space-x-2 whitespace-nowrap">
                                 <Phone className="w-4 h-4 text-slate-500" />
                                 <span>{item.no_cp || '-'}</span>
                               </div>
+                            </td>
+                            <td className="p-4 text-slate-700 max-w-xs"> {/* Kolom untuk link pendaftaran */}
+                                {item.link_pendaftaran ? (
+                                    <a
+                                        href={item.link_pendaftaran}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors duration-200 truncate"
+                                        title={item.link_pendaftaran}
+                                    >
+                                        <Link className="w-4 h-4 mr-1" />
+                                        <span className="truncate">{item.link_pendaftaran.replace(/(^\w+:|^)\/\//, '').split('/')[0]}</span> {/* Tampilkan domain saja */}
+                                    </a>
+                                ) : (
+                                    <span>-</span>
+                                )}
                             </td>
                             <td className="p-4 text-slate-700 max-w-xs">
                               <div className="truncate" title={item.deskripsi}>
@@ -326,7 +325,7 @@ export default function KelolaAcara() {
                                   rel="noopener noreferrer"
                                   className="block group"
                                 >
-                                  <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center overflow-hidden">
+                                  <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center overflow-hidden">
                                     <img
                                       src={item.poster_url}
                                       alt="Poster Acara"
@@ -380,7 +379,7 @@ export default function KelolaAcara() {
       {/* Modal Edit */}
       {editModal.open && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg w-full max-w-4xl border border-white/50">
+          <div className="bg-white/70 backdrop-blur-sm p-6 rounded-2xl shadow-lg w-full max-w-4xl border border-white/50">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
                 <Edit className="w-5 h-5 text-white" />
@@ -438,6 +437,16 @@ export default function KelolaAcara() {
                   onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, no_cp: e.target.value } })}
                   className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
                   placeholder="Contoh: +628123456789"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Link Pendaftaran (Opsional)</label> {/* Tambah field ini */}
+                <input
+                  type="url"
+                  value={editModal.data.link_pendaftaran || ''}
+                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, link_pendaftaran: e.target.value } })}
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
+                  placeholder="URL untuk pendaftaran eksternal"
                 />
               </div>
               <div>
