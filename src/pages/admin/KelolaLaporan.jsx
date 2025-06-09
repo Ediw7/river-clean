@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase'; // Pastikan path ini benar
-import HeaderAdmin from '../../components/admin/HeaderAdmin'; // Pastikan path ini benar
-import SidebarAdmin from '../../components/admin/SidebarAdmin'; // Pastikan path ini benar
+import { supabase } from '../../lib/supabase';
+import HeaderAdmin from '../../components/admin/HeaderAdmin';
+import SidebarAdmin from '../../components/admin/SidebarAdmin';
 import {
   FileText,
   MapPin,
@@ -25,53 +25,45 @@ export default function KelolaLaporan() {
   const [noteModal, setNoteModal] = useState({ open: false, data: null, note: '' });
   const [followUpModal, setFollowUpModal] = useState({ open: false, data: null, followUp: '' });
 
-  // Menggunakan useCallback untuk memoize fetchLaporan
   const fetchLaporan = useCallback(async () => {
     try {
-        const { data, error } = await supabase
-            .from('laporan_pencemaran')
-            .select(
-                `
-                id,
-                nama,
-                email,
-                whatsapp_number,
-                deskripsi,
-                lokasi,
-                jenis_sampah,
-                foto_path,
-                status,
-                catatan_admin,
-                tindak_lanjut,
-                sent_to_team,
-                created_at,
-                updated_at
-                `
-            )
-            .order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('laporan_pencemaran')
+        .select(
+          `
+            id,
+            nama,
+            email,
+            whatsapp_number,
+            deskripsi,
+            lokasi,
+            jenis_sampah,
+            foto_path,
+            status,
+            catatan_admin,
+            tindak_lanjut,
+            sent_to_team,
+            created_at,
+            updated_at
+          `
+        )
+        .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error('Supabase error saat memuat laporan:', error);
-            // Tambahkan lebih banyak detail error jika ada
-            console.error('Pesan error Supabase:', error.message);
-            console.error('Detail error Supabase:', error.details);
-            console.error('Hint error Supabase:', error.hint);
-            throw error;
-        }
+      if (error) {
+        console.error('Supabase error saat memuat laporan:', error);
+        throw error;
+      }
 
-        console.log('Data laporan berhasil dimuat:', data);
-        console.log('Jumlah laporan:', data ? data.length : 0); // Tambahkan ini
-        setLaporan(data || []);
+      console.log('Data laporan berhasil dimuat:', data);
+      setLaporan(data || []);
     } catch (err) {
-        console.error('Error detail fetchLaporan:', err);
-        setError('Gagal memuat laporan: ' + (err.message || 'Unknown error'));
+      console.error('Error detail fetchLaporan:', err);
+      setError('Gagal memuat laporan: ' + (err.message || 'Unknown error'));
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-}, []);
+  }, []);
 
-  // Efek ini hanya akan menangani autentikasi dan memuat data awal.
-  // Tidak ada lagi logika real-time subscription di sini.
   useEffect(() => {
     const checkAuthAndFetch = async () => {
       try {
@@ -101,42 +93,27 @@ export default function KelolaLaporan() {
           return;
         }
 
-        // Panggil fetchLaporan untuk memuat data
         await fetchLaporan();
 
       } catch (err) {
         console.error('Kesalahan dalam checkAuthAndFetch:', err);
         setError('Gagal memuat halaman: ' + (err.message || 'Unknown error'));
-        setLoading(false); // Pastikan loading diatur ke false jika ada error
+        setLoading(false);
       }
     };
 
     checkAuthAndFetch();
+  }, [navigate, fetchLaporan]);
 
-    // Tidak ada cleanup untuk real-time karena tidak ada subscription
-  }, [navigate, fetchLaporan]); // fetchLaporan sebagai dependensi karena dipanggil di dalam efek
-
-  // Fungsi ini bisa tetap ada jika Anda berencana menambahkan filter di masa depan
+  // fetchLaporanWithFilter tetap ada, tidak berubah
   const fetchLaporanWithFilter = async (statusFilter = null) => {
     try {
       let query = supabase
         .from('laporan_pencemaran')
         .select(
           `
-            id,
-            nama,
-            email,
-            whatsapp_number,
-            deskripsi,
-            lokasi,
-            jenis_sampah,
-            foto_path,
-            status,
-            catatan_admin,
-            tindak_lanjut,
-            sent_to_team,
-            created_at,
-            updated_at
+            id, nama, email, whatsapp_number, deskripsi, lokasi, jenis_sampah,
+            foto_path, status, catatan_admin, tindak_lanjut, sent_to_team, created_at, updated_at
           `
         )
         .order('created_at', { ascending: false });
@@ -146,12 +123,10 @@ export default function KelolaLaporan() {
       }
 
       const { data, error } = await query;
-
       if (error) {
         console.error('Supabase error saat memuat laporan dengan filter:', error);
         throw error;
       }
-
       setLaporan(data || []);
     } catch (err) {
       console.error('Error detail fetchLaporanWithFilter:', err);
@@ -159,131 +134,187 @@ export default function KelolaLaporan() {
     }
   };
 
-
   const handleStatusChange = async (id, newStatus) => {
+    // 1. Simpan state laporan sebelum perubahan untuk rollback jika terjadi error
+    const originalLaporan = [...laporan];
+    const itemIndex = laporan.findIndex((item) => item.id === id);
+    const originalItem = laporan[itemIndex];
+
+    // 2. Optimistic UI Update: Langsung update state di frontend
+    setLaporan((prevLaporan) =>
+      prevLaporan.map((item) =>
+        item.id === id ? { ...item, status: newStatus, updated_at: new Date().toISOString() } : item
+      )
+    );
+
     try {
-      const laporanItem = laporan.find((item) => item.id === id);
       const { error } = await supabase
         .from('laporan_pencemaran')
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', id);
-      if (error) throw error;
 
-      // Setelah update, panggil fetchLaporan untuk me-refresh data
-      // karena tidak ada real-time subscription lagi.
-      await fetchLaporan();
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       // Kirim pesan WhatsApp hanya jika status berubah dari 'menunggu'
-      if (laporanItem.whatsapp_number && newStatus !== 'menunggu') {
-        const message = `Halo ${laporanItem.nama || 'Pelapor'},\n\nStatus laporan Anda (ID: ${id}) telah diperbarui menjadi: *${newStatus}*.`;
-        const whatsappUrl = `https://wa.me/${laporanItem.whatsapp_number.replace('+', '')}?text=${encodeURIComponent(message)}`;
+      if (originalItem.whatsapp_number && newStatus !== 'menunggu') {
+        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nStatus laporan Anda (ID: ${id}) telah diperbarui menjadi: *${newStatus}*.`;
+        const whatsappUrl = `https://wa.me/${originalItem.whatsapp_number.replace('+', '')}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
       }
     } catch (err) {
       setError('Gagal mengubah status: ' + err.message);
+      // Rollback UI jika terjadi error
+      setLaporan(originalLaporan);
     }
   };
 
   const handleDelete = async (id, fotoPath) => {
     if (window.confirm('Yakin ingin menghapus laporan ini?')) {
+      const originalLaporan = [...laporan]; // Simpan state asli
+      
+      // Optimistic UI Update: Hapus dari daftar di frontend
+      setLaporan((prevLaporan) => prevLaporan.filter((item) => item.id !== id));
+
       try {
         if (fotoPath) {
           const filePathInStorage = fotoPath.startsWith('public/')
             ? fotoPath.substring('public/'.length)
             : fotoPath;
-
           const { error: storageError } = await supabase.storage.from('laporan-foto').remove([filePathInStorage]);
           if (storageError) {
             console.warn('Gagal menghapus foto dari storage:', storageError.message);
           }
         }
         const { error } = await supabase.from('laporan_pencemaran').delete().eq('id', id);
-        if (error) throw error;
-        
-        // Setelah delete, panggil fetchLaporan untuk me-refresh data.
-        await fetchLaporan();
-
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
       } catch (err) {
         setError('Gagal menghapus laporan: ' + err.message);
+        // Rollback UI jika error
+        setLaporan(originalLaporan);
       }
     }
   };
 
   const handleEdit = async (id, updatedData) => {
+    const originalLaporan = [...laporan];
+    const itemIndex = laporan.findIndex((item) => item.id === id);
+    const originalItem = laporan[itemIndex];
+
+    setLaporan((prevLaporan) =>
+      prevLaporan.map((item) =>
+        item.id === id ? { ...item, ...updatedData, updated_at: new Date().toISOString() } : item
+      )
+    );
+    setEditModal({ open: false, data: null }); // Tutup modal segera
+
     try {
       const { error } = await supabase
         .from('laporan_pencemaran')
         .update({ ...updatedData, updated_at: new Date().toISOString() })
         .eq('id', id);
-      if (error) throw error;
-      
-      // Setelah edit, panggil fetchLaporan untuk me-refresh data.
-      await fetchLaporan();
-
-      setEditModal({ open: false, data: null });
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
     } catch (err) {
       setError('Gagal mengedit laporan: ' + err.message);
+      setLaporan(originalLaporan); // Rollback UI
+      setEditModal({ open: true, data: originalItem }); // Buka kembali modal jika perlu
     }
   };
 
   const handleAddNote = async (id, note) => {
+    const originalLaporan = [...laporan];
+    const itemIndex = laporan.findIndex((item) => item.id === id);
+    const originalItem = laporan[itemIndex];
+
+    setLaporan((prevLaporan) =>
+      prevLaporan.map((item) =>
+        item.id === id ? { ...item, catatan_admin: note, updated_at: new Date().toISOString() } : item
+      )
+    );
+    setNoteModal({ open: false, data: null, note: '' }); // Tutup modal segera
+
     try {
-      const laporanItem = laporan.find((item) => item.id === id);
       const { error } = await supabase
         .from('laporan_pencemaran')
         .update({ catatan_admin: note, updated_at: new Date().toISOString() })
         .eq('id', id);
-      if (error) throw error;
-      
-      // Setelah update, panggil fetchLaporan untuk me-refresh data.
-      await fetchLaporan();
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      setNoteModal({ open: false, data: null, note: '' });
-
-      if (laporanItem.whatsapp_number) {
-        const message = `Halo ${laporanItem.nama || 'Pelapor'},\n\nCatatan admin untuk laporan Anda (ID: ${id}): *${note}*.\nStatus laporan Anda saat ini: *${laporanItem.status}*.`;
-        const whatsappUrl = `https://wa.me/${laporanItem.whatsapp_number.replace('+', '')}?text=${encodeURIComponent(message)}`;
+      if (originalItem.whatsapp_number) {
+        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nCatatan admin untuk laporan Anda (ID: ${id}): *${note}*.\nStatus laporan Anda saat ini: *${originalItem.status}*.`;
+        const whatsappUrl = `https://wa.me/${originalItem.whatsapp_number.replace('+', '')}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
       }
     } catch (err) {
       setError('Gagal menambahkan catatan: ' + err.message);
+      setLaporan(originalLaporan); // Rollback UI
+      setNoteModal({ open: true, data: originalItem, note: originalItem.catatan_admin || '' }); // Buka kembali modal jika perlu
     }
   };
 
   const handleAddFollowUp = async (id, followUp) => {
+    const originalLaporan = [...laporan];
+    const itemIndex = laporan.findIndex((item) => item.id === id);
+    const originalItem = laporan[itemIndex];
+
+    setLaporan((prevLaporan) =>
+      prevLaporan.map((item) =>
+        item.id === id ? { ...item, tindak_lanjut: followUp, updated_at: new Date().toISOString() } : item
+      )
+    );
+    setFollowUpModal({ open: false, data: null, followUp: '' }); // Tutup modal segera
+
     try {
-      const laporanItem = laporan.find((item) => item.id === id);
       const { error } = await supabase
         .from('laporan_pencemaran')
         .update({ tindak_lanjut: followUp, updated_at: new Date().toISOString() })
         .eq('id', id);
-      if (error) throw error;
-      
-      // Setelah update, panggil fetchLaporan untuk me-refresh data.
-      await fetchLaporan();
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      setFollowUpModal({ open: false, data: null, followUp: '' });
-
-      if (laporanItem.whatsapp_number) {
-        const message = `Halo ${laporanItem.nama || 'Pelapor'},\n\nTindak lanjut terbaru untuk laporan Anda (ID: ${id}): *${followUp}*.\nStatus laporan Anda saat ini: *${laporanItem.status}*.`;
-        const whatsappUrl = `https://wa.me/${laporanItem.whatsapp_number.replace('+', '')}?text=${encodeURIComponent(message)}`;
+      if (originalItem.whatsapp_number) {
+        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nTindak lanjut terbaru untuk laporan Anda (ID: ${id}): *${followUp}*.\nStatus laporan Anda saat ini: *${originalItem.status}*.`;
+        const whatsappUrl = `https://wa.me/${originalItem.whatsapp_number.replace('+', '')}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
       }
     } catch (err) {
       setError('Gagal menambahkan tindak lanjut: ' + err.message);
+      setLaporan(originalLaporan); // Rollback UI
+      setFollowUpModal({ open: true, data: originalItem, followUp: originalItem.tindak_lanjut || '' }); // Buka kembali modal jika perlu
     }
   };
 
   const handleSendToTeam = async (id, item) => {
+    const originalLaporan = [...laporan];
+    const itemIndex = laporan.findIndex((l) => l.id === id);
+    const originalItem = laporan[itemIndex];
+
+    setLaporan((prevLaporan) =>
+      prevLaporan.map((prevItem) =>
+        prevItem.id === id ? { ...prevItem, sent_to_team: true, updated_at: new Date().toISOString() } : prevItem
+      )
+    );
+
     try {
-      const phoneNumber = '082325720215'; // Ganti dengan nomor WhatsApp tim lapangan Anda
-      
+      const phoneNumber = '+6285640170089'; // Ganti dengan nomor WhatsApp tim lapangan Anda
       const displayFotoPath = item.foto_path && item.foto_path.startsWith('public/')
         ? item.foto_path.substring('public/'.length)
         : item.foto_path;
-
       const imageUrl = item.foto_path
-        ? `https://wwuorklatnmvtkhsjkzt.supabase.co/storage/v1/object/public/laporan-foto/${displayFotoPath}`
+        ? `https://wwuorklatnmvtkhsjkzt.supabase.co/storage/v1/object/public/laporan-foto/public/${displayFotoPath}`
         : 'Tidak ada foto';
 
       const message = `*Laporan Pencemaran Baru untuk Tindak Lanjut*\n\n*ID Laporan:* ${id}\n*Lokasi:* ${item.lokasi}\n*Deskripsi:* ${item.deskripsi}\n*Jenis Sampah:* ${item.jenis_sampah}\n*Foto:* ${imageUrl}\n\n*Mohon segera ditindaklanjuti oleh tim lapangan.*`;
@@ -294,13 +325,13 @@ export default function KelolaLaporan() {
         .from('laporan_pencemaran')
         .update({ sent_to_team: true, updated_at: new Date().toISOString() })
         .eq('id', id);
-      if (error) throw error;
-      
-      // Setelah update, panggil fetchLaporan untuk me-refresh data.
-      await fetchLaporan();
-
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
     } catch (err) {
       setError('Gagal mengirim ke tim lapangan: ' + err.message);
+      setLaporan(originalLaporan); // Rollback UI
     }
   };
 
@@ -368,26 +399,25 @@ export default function KelolaLaporan() {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
-                          <th className="p-4 font-semibold text-slate-700">Nama Pelapor</th>
-                          <th className="p-4 font-semibold text-slate-700">Email</th>
-                          <th className="p-4 font-semibold text-slate-700">WA</th>
-                          <th className="p-4 font-semibold text-slate-700">Deskripsi</th>
-                          <th className="p-4 font-semibold text-slate-700">Lokasi</th>
-                          <th className="p-4 font-semibold text-slate-700">Jenis Sampah</th>
-                          <th className="p-4 font-semibold text-slate-700">Foto</th>
-                          <th className="p-4 font-semibold text-slate-700">Status</th>
-                          <th className="p-4 font-semibold text-slate-700">Catatan Admin</th>
-                          <th className="p-4 font-semibold text-slate-700">Aksi</th>
-                          <th className="p-4 font-semibold text-slate-700">Aksi Lanjut</th>
-                          <th className="p-4 font-semibold text-slate-700">Tindak Lanjut</th>
+                    <table className="min-w-full divide-y divide-slate-200"> {/* Added min-w-full */}
+                      <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
+                        <tr>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Nama Pelapor</th>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Email</th>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">WA</th>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Deskripsi</th>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Lokasi</th>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Jenis Sampah</th>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Foto</th>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Catatan Admin</th>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Aksi</th>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Aksi Lanjut</th>
+                          <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Tindak Lanjut</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="bg-white divide-y divide-slate-100">
                         {laporan.map((item, index) => {
-                          // Menyesuaikan fotoPath untuk tampilan gambar
                           const displayFotoPath = item.foto_path && item.foto_path.startsWith('public/')
                             ? item.foto_path.substring('public/'.length)
                             : item.foto_path;
@@ -395,23 +425,26 @@ export default function KelolaLaporan() {
                           return (
                             <tr
                               key={item.id}
-                              className={`border-b border-slate-100 hover:bg-gradient-to-r hover:from-cyan-50/30 hover:to-blue-50/30 transition-all duration-300 ${
+                              className={`hover:bg-gradient-to-r hover:from-cyan-50/30 hover:to-blue-50/30 transition-all duration-300 ${
                                 index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
                               }`}
                             >
-                              <td className="p-4 text-slate-700">{item.nama || 'Tidak diketahui'}</td>
-                              <td className="p-4 text-slate-700">{item.email}</td>
-                              <td className="p-4 text-slate-700">{item.whatsapp_number || 'Tidak ada'}</td>
-                              <td className="p-4 text-slate-700 max-w-xs">
+                              <td className="p-4 text-slate-700 whitespace-nowrap">{item.nama || 'Tidak diketahui'}</td>
+                              <td className="p-4 text-slate-700 whitespace-nowrap">{item.email}</td>
+                              <td className="p-4 text-slate-700 whitespace-nowrap">{item.whatsapp_number || 'Tidak ada'}</td>
+                              <td className="p-4 text-slate-700 max-w-xs overflow-hidden text-ellipsis">
                                 <div className="truncate" title={item.deskripsi}>
                                   {item.deskripsi}
                                 </div>
                               </td>
-                              <td className="p-4 text-slate-700 flex items-center space-x-2">
-                                <MapPin className="w-4 h-4 text-slate-500" />
-                                <span>{item.lokasi}</span>
+                              <td className="p-4 text-slate-700 whitespace-nowrap">
+                                <div className="flex items-center space-x-2"> {/* Pastikan ini ada dan benar */}
+                                  <MapPin className="w-4 h-4 text-slate-500" />
+                                  <span>{item.lokasi}</span>
+                                </div>
                               </td>
-                              <td className="p-4">
+
+                              <td className="p-4 whitespace-nowrap">
                                 <span className="inline-flex px-3 py-1 bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-700 rounded-full text-sm font-medium">
                                   {item.jenis_sampah}
                                 </span>
@@ -419,17 +452,17 @@ export default function KelolaLaporan() {
                               <td className="p-4">
                                 {item.foto_path ? (
                                   <a
-                                    href={`https://wwuorklatnmvtkhsjkzt.supabase.co/storage/v1/object/public/laporan-foto/${displayFotoPath}`}
+                                    href={`https://wwuorklatnmvtkhsjkzt.supabase.co/storage/v1/object/public/laporan-foto/public/${displayFotoPath}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="block group"
                                   >
                                     <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center overflow-hidden">
                                       <img
-                                        src={`https://wwuorklatnmvtkhsjkzt.supabase.co/storage/v1/object/public/laporan-foto/${displayFotoPath}`}
+                                        src={`https://wwuorklatnmvtkhsjkzt.supabase.co/storage/v1/object/public/laporan-foto/public/${displayFotoPath}`}
                                         alt="Foto Laporan"
                                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                        onError={(e) => (e.target.src = '/path/to/fallback-image.jpg')} // Fallback image if loading fails
+                                        onError={(e) => (e.target.src = '/path/to/fallback-image.jpg')}
                                       />
                                     </div>
                                   </a>
@@ -439,20 +472,20 @@ export default function KelolaLaporan() {
                                   </div>
                                 )}
                               </td>
-                              <td className="p-4">
+                              <td className="p-4 whitespace-nowrap">
                                 <div className="flex flex-col space-y-2">
                                   {item.status === 'menunggu' && (
                                     <>
                                       <button
                                         onClick={() => handleStatusChange(item.id, 'diverifikasi')}
-                                        className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 flex items-center space-x-1"
+                                        className="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
                                       >
                                         <CheckCircle className="w-4 h-4" />
                                         <span>Verifikasi</span>
                                       </button>
                                       <button
                                         onClick={() => handleStatusChange(item.id, 'ditolak')}
-                                        className="px-3 py-1.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 flex items-center space-x-1"
+                                        className="w-full px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
                                       >
                                         <XCircle className="w-4 h-4" />
                                         <span>Tolak</span>
@@ -463,8 +496,8 @@ export default function KelolaLaporan() {
                                     <span
                                       className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
                                         item.status === 'diverifikasi'
-                                          ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700'
-                                          : 'bg-gradient-to-r from-red-100 to-rose-100 text-red-700'
+                                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                          : 'bg-red-50 text-red-700 border border-red-200'
                                       }`}
                                     >
                                       {item.status}
@@ -472,50 +505,50 @@ export default function KelolaLaporan() {
                                   )}
                                 </div>
                               </td>
-                              <td className="p-4 text-slate-700 max-w-xs">
+                              <td className="p-4 text-slate-700 max-w-xs overflow-hidden text-ellipsis">
                                 <div className="truncate" title={item.catatan_admin}>
                                   {item.catatan_admin || '-'}
                                 </div>
                               </td>
-                              <td className="p-4">
-                                <div className="flex flex-wrap gap-2">
+                              <td className="p-4 whitespace-nowrap">
+                                <div className="flex flex-col gap-2">
                                   <button
                                     onClick={() => setEditModal({ open: true, data: item })}
-                                    className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/25 flex items-center space-x-1"
+                                    className="w-full px-3 py-1.5 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
                                   >
                                     <Edit className="w-4 h-4" />
                                     <span>Edit</span>
                                   </button>
                                   <button
                                     onClick={() => handleDelete(item.id, item.foto_path)}
-                                    className="px-3 py-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-600/25 flex items-center space-x-1"
+                                    className="w-full px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                     <span>Hapus</span>
                                   </button>
                                   <button
                                     onClick={() => setNoteModal({ open: true, data: item, note: item.catatan_admin || '' })}
-                                    className="px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 flex items-center space-x-1"
+                                    className="w-full px-3 py-1.5 bg-slate-600 hover:bg-slate-700 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
                                   >
                                     <StickyNote className="w-4 h-4" />
                                     <span>Catatan</span>
                                   </button>
                                 </div>
                               </td>
-                              <td className="p-4">
-                                <div className="flex flex-wrap gap-2">
+                              <td className="p-4 whitespace-nowrap">
+                                <div className="flex flex-col gap-2">
                                   {item.status === 'diverifikasi' && (
                                     <>
                                       <button
                                         onClick={() => handleSendToTeam(item.id, item)}
-                                        className="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/25 flex items-center space-x-1"
+                                        className="w-full px-3 py-1.5 bg-teal-600 hover:bg-teal-700 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
                                       >
                                         <Send className="w-4 h-4" />
                                         <span>Kirim Tim</span>
                                       </button>
                                       <button
                                         onClick={() => setFollowUpModal({ open: true, data: item, followUp: item.tindak_lanjut || '' })}
-                                        className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 flex items-center space-x-1"
+                                        className="w-full px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
                                       >
                                         <StickyNote className="w-4 h-4" />
                                         <span>Tindak Lanjut</span>
@@ -524,7 +557,7 @@ export default function KelolaLaporan() {
                                   )}
                                 </div>
                               </td>
-                              <td className="p-4 text-slate-700 max-w-xs">
+                              <td className="p-4 text-slate-700 max-w-xs overflow-hidden text-ellipsis">
                                 <div className="truncate" title={item.tindak_lanjut}>
                                   {item.tindak_lanjut || '-'}
                                 </div>
@@ -542,7 +575,7 @@ export default function KelolaLaporan() {
         </main>
       </div>
 
-      {/* Edit Modal */}
+      {/* Modals (No changes needed here for functionality, only styling) */}
       {editModal.open && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
@@ -614,7 +647,6 @@ export default function KelolaLaporan() {
         </div>
       )}
 
-      {/* Note Modal */}
       {noteModal.open && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
@@ -651,7 +683,6 @@ export default function KelolaLaporan() {
         </div>
       )}
 
-      {/* Follow-Up Modal */}
       {followUpModal.open && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
