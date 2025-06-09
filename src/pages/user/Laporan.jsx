@@ -68,6 +68,14 @@ export default function Laporan() {
       if (userError) throw userError;
       if (!user) throw new Error('User tidak login.');
 
+      // Ambil data profil dari tabel users
+      const { data: userProfile, error: profileError } = await supabase
+        .from('users')
+        .select('nama, whatsapp_number')
+        .eq('id', user.id)
+        .single();
+      if (profileError) throw profileError;
+
       let fotoPath = null;
       if (formData.foto) {
         const fileExt = formData.foto.name.split('.').pop();
@@ -93,8 +101,8 @@ export default function Laporan() {
       const newReport = {
         user_id: user.id,
         email: user.email,
-        whatsapp_number: user.whatsapp_number,
-        nama: user.nama,
+        whatsapp_number: userProfile.whatsapp_number || null,
+        nama: userProfile.nama || null,
         foto_path: fotoPath,
         deskripsi: formData.deskripsi,
         lokasi: formData.lokasi,
@@ -344,6 +352,12 @@ export default function Laporan() {
                                   <div className="flex items-center text-orange-300 mb-2">
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     <span className="font-medium">{item.jenis_sampah}</span>
+                                  </div>
+                                  <div className="flex items-center text-gray-400 mb-2">
+                                    <span className="font-medium">Pelapor: {item.nama || 'Tidak diketahui'}</span>
+                                  </div>
+                                  <div className="flex items-center text-gray-400">
+                                    <span className="font-medium">WA: {item.whatsapp_number || 'Tidak ada'}</span>
                                   </div>
                                 </div>
                                 <div className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
