@@ -1,13 +1,41 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, MapPin, Loader2, Search, Filter } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import HeaderUser from '../../components/user/HeaderUser';
 import FooterUser from '../../components/user/FooterUser';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Import Leaflet dan Heatmap (manual initialization)
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet.heat';
+import 'leaflet.heat'; // Pastikan sudah terinstal: npm install leaflet.heat
+
+// FIX DEFAULT LEAFLET ICON (penting agar marker default tampil)
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+});
+
+// Custom Icons for different statuses
+const getMarkerIcon = (status) => {
+  const iconUrl = {
+    bersih: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    tercemar: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png', // Yellow for tercemar
+    kritis: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',    // Red for kritis
+  }[status] || 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png'; // Default blue
+
+  return new L.Icon({
+    iconUrl,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  });
+};
+
 
 export default function Peta() {
   const navigate = useNavigate();
@@ -17,39 +45,47 @@ export default function Peta() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const mapRef = useRef(null);
-  const mapInstanceRef = useRef(null);
+  const mapRef = useRef(null); // Ref for the map container DOM element
+  const mapInstanceRef = useRef(null); // Ref for the Leaflet map instance
 
+  // useCallback untuk fetchData agar tidak dibuat ulang setiap render
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('peta_status')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (fetchError) throw fetchError;
+      setPetaData(data || []);
+    } catch (err) {
+      setError('Gagal memuat data peta: ' + err.message);
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Check Auth dan Fetch Data Awal
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndFetch = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate('/login');
         return;
       }
-
-      try {
-        const { data } = await supabase
-          .from('peta_status')
-          .select('*')
-          .order('updated_at', { ascending: false });
-
-        setPetaData(data || []);
-        setFilteredData(data || []);
-      } catch (err) {
-        setError('Gagal memuat data peta: ' + err.message);
-      } finally {
-        setLoading(false);
-      }
+      await fetchData(); // Panggil fetchData setelah otentikasi
     };
-    checkAuth();
-  }, [navigate]);
+    checkAuthAndFetch();
+  }, [navigate, fetchData]); // fetchData sebagai dependency
 
+  // Initialize Leaflet map (diperbarui untuk bekerja dengan filteredData)
   useEffect(() => {
-    if (!loading && petaData.length > 0 && !mapInstanceRef.current) {
-      // Initialize Leaflet map
+    // Hanya inisialisasi peta sekali dan jika data sudah dimuat
+    if (!loading && filteredData.length > 0 && mapRef.current && !mapInstanceRef.current) {
       mapInstanceRef.current = L.map(mapRef.current, {
-        center: [-6.2088, 106.8456], // Default: Jakarta, Indonesia
+        center: [filteredData[0].latitude || -6.2088, filteredData[0].longitude || 106.8456], // Set center based on first item
         zoom: 10,
         layers: [
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -57,23 +93,33 @@ export default function Peta() {
           }),
         ],
       });
+    }
 
-      // Add markers and heatmap
+    // Update markers and heatmap whenever filteredData changes
+    if (mapInstanceRef.current) {
+      // Clear existing layers (markers and heatmap)
+      mapInstanceRef.current.eachLayer((layer) => {
+        if (layer instanceof L.Marker || layer._heat) { // Check for Marker instances or heatmap layers
+          mapInstanceRef.current.removeLayer(layer);
+        }
+      });
+
       const heatPoints = [];
-      petaData.forEach((item) => {
+      filteredData.forEach((item) => {
         const lat = item.latitude || -6.2088; // Fallback coordinates
         const lng = item.longitude || 106.8456;
         const intensity = item.heatmap_intensity || 0.5;
 
-        // Add marker with popup
-        L.marker([lat, lng])
+        // Add marker with custom icon and popup
+        L.marker([lat, lng], { icon: getMarkerIcon(item.status) }) // Menggunakan getMarkerIcon
           .addTo(mapInstanceRef.current)
           .bindPopup(`
             <div class="p-2">
               <h3 class="font-bold text-cyan-300">${item.lokasi}</h3>
               <p>Status: <span class="font-semibold">${getStatusText(item.status)}</span></p>
               <p>Jenis Limbah: ${item.jenis_limbah || '-'}</p>
-              <p>Intensitas: ${intensity}</p>
+              <p>Intensitas: ${intensity || '-'}</p>
+              <p>Terakhir Diperbarui: ${new Date(item.updated_at).toLocaleString()}</p>
             </div>
           `);
 
@@ -82,20 +128,26 @@ export default function Peta() {
       });
 
       // Add heatmap layer
-      L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 17 }).addTo(mapInstanceRef.current);
-
-      return () => {
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.remove();
-          mapInstanceRef.current = null;
-        }
-      };
+      L.heatLayer(heatPoints, {
+        radius: 25,
+        blur: 15,
+        maxZoom: 17,
+        gradient: { 0.0: 'blue', 0.2: 'cyan', 0.4: 'green', 0.6: 'yellow', 0.8: 'orange', 1.0: 'red' }
+      }).addTo(mapInstanceRef.current);
     }
-  }, [loading, petaData]);
 
+    // Cleanup function for map instance
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [loading, filteredData]); // Dependency pada filteredData agar peta terupdate saat filter
+
+  // Logic filter dan search (filteredData sekarang menjadi state yang bergantung pada petaData)
   useEffect(() => {
-    // Filter and search logic
-    let filtered = petaData;
+    let filtered = petaData; // Mulai dari data asli (petaData)
     if (searchTerm) {
       filtered = filtered.filter((item) =>
         item.lokasi.toLowerCase().includes(searchTerm.toLowerCase())
@@ -106,30 +158,35 @@ export default function Peta() {
         item.status.toLowerCase() === statusFilter.toLowerCase()
       );
     }
-    setFilteredData(filtered);
-  }, [searchTerm, statusFilter, petaData]);
+    setFilteredData(filtered); // Update filteredData, yang akan memicu useEffect peta
+  }, [searchTerm, statusFilter, petaData]); // Re-run saat searchTerm, statusFilter, atau petaData berubah
 
+  // Fungsi utilitas untuk warna status
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'bersih': return 'bg-green-500';
-      case 'tercemar': return 'bg-red-500';
-      case 'sedang': return 'bg-yellow-500';
+      case 'bersih': return 'bg-green-600';
+      case 'tercemar': return 'bg-yellow-600'; // Tercemar -> Kuning
+      case 'kritis': return 'bg-red-600';     // Kritis -> Merah
       default: return 'bg-gray-500';
     }
   };
 
+  // Fungsi utilitas untuk teks status
   const getStatusText = (status) => {
     switch (status?.toLowerCase()) {
       case 'bersih': return 'Bersih';
       case 'tercemar': return 'Tercemar';
-      case 'sedang': return 'Sedang';
+      case 'kritis': return 'Kritis';
       default: return 'Tidak Diketahui';
     }
   };
 
   const handleCardClick = (item) => {
     if (mapInstanceRef.current && item.latitude && item.longitude) {
-      mapInstanceRef.current.setView([item.latitude, item.longitude], 14);
+      // Set view peta ke lokasi item yang diklik
+      mapInstanceRef.current.setView([item.latitude, item.longitude], 14); // Zoom level 14
+      
+      // Buka popup secara manual (karena kita tidak pakai React-Leaflet Popup Component)
       L.popup()
         .setLatLng([item.latitude, item.longitude])
         .setContent(`
@@ -137,7 +194,8 @@ export default function Peta() {
             <h3 class="font-bold text-cyan-300">${item.lokasi}</h3>
             <p>Status: <span class="font-semibold">${getStatusText(item.status)}</span></p>
             <p>Jenis Limbah: ${item.jenis_limbah || '-'}</p>
-            <p>Intensitas: ${item.heatmap_intensity}</p>
+            <p>Intensitas: ${item.heatmap_intensity || '-'}</p>
+            <p>Terakhir Diperbarui: ${new Date(item.updated_at).toLocaleString()}</p>
           </div>
         `)
         .openOn(mapInstanceRef.current);
@@ -160,7 +218,7 @@ export default function Peta() {
               <h2 className="text-xl font-bold text-red-300 mb-4">Terjadi Kesalahan</h2>
               <p className="text-gray-300 mb-6">{error}</p>
               <button
-                onClick={() => setError(null)}
+                onClick={() => fetchData()} // Panggil fetchData untuk coba lagi
                 className="px-6 py-3 bg-gradient-to-r from-cyan-600/30 to-blue-600/30 border border-cyan-500/50 rounded-xl text-cyan-200 hover:from-cyan-600/40 hover:to-blue-600/40 transition-all duration-300 font-medium"
                 aria-label="Coba Lagi"
               >
@@ -231,14 +289,14 @@ export default function Peta() {
                       >
                         <option value="all">Semua Status</option>
                         <option value="bersih">Bersih</option>
-                        <option value="sedang">Sedang</option>
                         <option value="tercemar">Tercemar</option>
+                        <option value="kritis">Kritis</option> {/* Tambah status kritis */}
                       </select>
                     </div>
                   </div>
                 </div>
 
-                {/* Map Container */}
+                {/* Map Container - Menggunakan ref */}
                 <div
                   ref={mapRef}
                   className="h-96 w-full"
@@ -267,6 +325,7 @@ export default function Peta() {
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
                       className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                     >
                       {filteredData.map((item) => (
@@ -291,19 +350,10 @@ export default function Peta() {
                           </div>
                           <div className="text-sm text-gray-300 space-y-2">
                             <p><span className="font-medium text-gray-200">Jenis Limbah:</span> {item.jenis_limbah || '-'}</p>
-                            <p><span className="font-medium text-gray-200">Intensitas Heatmap:</span> {item.heatmap_intensity}</p>
+                            <p><span className="font-medium text-gray-200">Intensitas Heatmap:</span> {item.heatmap_intensity || '-'}</p>
                             <p><span className="font-medium text-gray-200">Terakhir Diperbarui:</span> {new Date(item.updated_at).toLocaleString()}</p>
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/peta/${item.id}`);
-                            }}
-                            className="mt-4 w-full py-2 px-4 bg-gradient-to-r from-cyan-600/30 to-blue-600/30 border border-cyan-500/50 rounded-lg text-cyan-200 hover:from-cyan-600/40 hover:to-blue-600/40 transition-all duration-300 text-sm font-medium"
-                            aria-label={`Lihat Detail ${item.lokasi}`}
-                          >
-                            Lihat Detail
-                          </button>
+                          {/* Tombol "Lihat Detail" dihapus sesuai permintaan */}
                         </motion.div>
                       ))}
                     </motion.div>
