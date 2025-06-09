@@ -2,80 +2,132 @@ import { useState, useEffect } from 'react';
 import { Camera, MapPin, Trash2, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import HeaderUser from '../../components/user/HeaderUser';
 import FooterUser from '../../components/user/FooterUser';
+import { supabase } from '../../lib/supabase';
 
 export default function Laporan() {
   const [formData, setFormData] = useState({
-    foto_url: '',
+    foto: null,
     deskripsi: '',
     lokasi: '',
     jenis_sampah: '',
   });
-  const [laporan, setLaporan] = useState([
-    {
-      id: 1,
-      lokasi: 'Sungai Citarum, Bandung',
-      jenis_sampah: 'Plastik dan Limbah Industri',
-      deskripsi: 'Terdapat banyak sampah plastik dan limbah berwarna hitam dengan bau yang sangat menyengat. Air sungai berubah warna menjadi kehitaman.',
-      status: 'Under Review',
-      foto_url: 'https://via.placeholder.com/400x300/1f2937/60a5fa?text=River+Pollution',
-      created_at: '2024-06-01T10:30:00Z'
-    },
-    {
-      id: 2,
-      lokasi: 'Sungai Ciliwung, Jakarta',
-      jenis_sampah: 'Minyak dan Sampah Organik',
-      deskripsi: 'Permukaan air tertutup lapisan minyak tipis dan sampah organik yang membusuk. Banyak ikan mati ditemukan mengapung.',
-      status: 'Processed',
-      created_at: '2024-05-28T14:20:00Z'
-    }
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [laporan, setLaporan] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    // Simulate loading for demonstration
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    fetchLaporan();
   }, []);
 
+  const fetchLaporan = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const userId = user.id;
+      const { data, error } = await supabase
+        .from('laporan_pencemaran')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setLaporan(data);
+    } catch (err) {
+      console.error('Error fetching laporan:', err);
+      setError('Gagal memuat riwayat laporan.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: files ? files[0] : value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('handleSubmit triggered');
+    
+    if (!formData.lokasi || !formData.jenis_sampah || !formData.deskripsi) {
+      setError('Semua field wajib diisi kecuali foto.');
+      return;
+    }
+    
     setError(null);
     setSubmitting(true);
-    
+    console.log('Form data:', formData);
+
     try {
-      if (formData.foto_url && !formData.foto_url.match(/^https?:\/\/.*\.(?:png|jpg|jpeg|gif)$/i)) {
-        throw new Error('URL foto tidak valid. Harap masukkan URL gambar (png, jpg, jpeg, atau gif).');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) throw new Error('User tidak login.');
+
+      let fotoPath = null;
+      if (formData.foto) {
+        const fileExt = formData.foto.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        console.log('Uploading file:', fileName);
+        const { error: uploadError, data } = await supabase.storage
+          .from('laporan-foto')
+          .upload(`public/${fileName}`, formData.foto, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          if (uploadError.message.includes('row-level security')) {
+            throw new Error('Akses ditolak oleh kebijakan keamanan. Hubungi admin untuk memperbarui RLS.');
+          }
+          throw new Error('Gagal mengunggah foto: ' + uploadError.message);
+        }
+        fotoPath = data.path;
+        console.log('Upload success, path:', fotoPath);
       }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       const newReport = {
-        id: Date.now(),
+        user_id: user.id,
+        email: user.email,
+        whatsapp_number: user.whatsapp_number,
+        nama: user.nama,
+        foto_path: fotoPath,
+        deskripsi: formData.deskripsi,
         lokasi: formData.lokasi,
         jenis_sampah: formData.jenis_sampah,
-        deskripsi: formData.deskripsi,
-        foto_url: formData.foto_url || null,
-        status: 'Under Review',
-        created_at: new Date().toISOString()
+        status: 'menunggu',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
-      
+
+      console.log('Inserting data:', newReport);
+      const { error: insertError } = await supabase
+        .from('laporan_pencemaran')
+        .insert(newReport);
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        if (insertError.message.includes('row-level security')) {
+          throw new Error('Akses ditolak oleh kebijakan keamanan tabel. Perbarui RLS.');
+        }
+        throw new Error('Gagal menyimpan laporan: ' + insertError.message);
+      }
+
+      console.log('Insert success');
+      alert('Laporan berhasil dikirim!');
       setLaporan(prev => [newReport, ...prev]);
-      setFormData({ foto_url: '', deskripsi: '', lokasi: '', jenis_sampah: '' });
+      setFormData({ foto: null, deskripsi: '', lokasi: '', jenis_sampah: '' });
+      
+      // Reset file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
     } catch (err) {
-      setError(`Gagal mengirim laporan: ${err.message}`);
+      console.error('ERROR:', err);
+      setError(err.message || 'Terjadi kesalahan saat mengirim laporan.');
+      alert(err.message || 'Terjadi kesalahan saat mengirim laporan.');
     } finally {
       setSubmitting(false);
     }
@@ -83,10 +135,12 @@ export default function Laporan() {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'Processed':
+      case 'diverifikasi':
         return <CheckCircle className="w-4 h-4" />;
-      case 'Under Review':
+      case 'menunggu':
         return <Clock className="w-4 h-4" />;
+      case 'ditolak':
+        return <AlertCircle className="w-4 h-4" />;
       default:
         return <AlertCircle className="w-4 h-4" />;
     }
@@ -95,7 +149,7 @@ export default function Laporan() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 text-white flex items-center justify-center relative overflow-hidden">
-          <HeaderUser />
+        <HeaderUser />
         <div className="absolute inset-0">
           <div className="absolute top-20 left-20 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-20 right-20 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -108,7 +162,7 @@ export default function Laporan() {
             <p className="text-red-200/80 mb-6">{error}</p>
             <button
               onClick={() => setError(null)}
-              className="px-6 py-3 bg-gradient-to-r from-red-600/30 to-red-700/30 border border-red-500/50 rounded-xl text-red-200 hover:from-red-600/40 hover:to-red-700/40 transition-all duration-300 font-medium"
+              className="px-6 py-4 bg-gradient-to-r from-red-600/30 to-red-700/30 border border-red-500/50 rounded-xl text-red-200 hover:from-red-600/40 hover:to-red-700/40 transition-all duration-300 font-medium"
             >
               Coba Lagi
             </button>
@@ -121,28 +175,21 @@ export default function Laporan() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 text-white flex flex-col relative overflow-x-hidden">
-      {/* Enhanced background effects */}
       <div className="absolute inset-0">
         <div className="absolute top-10 left-10 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-10 right-10 w-80 h-80 bg-emerald-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-blue-400/15 rounded-full blur-3xl animate-pulse delay-2000"></div>
         <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-teal-400/15 rounded-full blur-3xl animate-pulse delay-3000"></div>
-        
-        {/* Animated particles */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/6 w-2 h-2 bg-cyan-400/40 rounded-full animate-ping"></div>
           <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-emerald-400/60 rounded-full animate-ping delay-1000"></div>
           <div className="absolute bottom-1/3 left-1/2 w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-ping delay-2000"></div>
         </div>
       </div>
-
-    
-      
       <HeaderUser />
       <div className="flex flex-1 pt-24 relative z-10">
         <main className="p-6 w-full">
           <div className="max-w-7xl mx-auto">
-            {/* Enhanced header */}
             <div className="text-center mb-12">
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 backdrop-blur-md border border-cyan-400/30 rounded-2xl mb-6">
                 <Camera className="w-10 h-10 text-cyan-300" />
@@ -155,22 +202,20 @@ export default function Laporan() {
               </p>
             </div>
 
-            {/* Enhanced form */}
-            <div onSubmit={handleSubmit} className="bg-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-3xl p-8 shadow-2xl mb-16 hover:bg-gray-900/50 transition-all duration-500">
+            <form onSubmit={handleSubmit} className="bg-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-3xl p-8 shadow-2xl mb-16 hover:bg-gray-900/50 transition-all duration-500">
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="group">
                     <label className="flex items-center text-gray-300 font-semibold mb-3">
                       <Camera className="w-5 h-5 mr-2 text-cyan-400" />
-                      Link Foto (Opsional)
+                      Unggah Foto (Opsional)
                     </label>
                     <input
-                      type="text"
-                      name="foto_url"
-                      value={formData.foto_url}
+                      type="file"
+                      name="foto"
                       onChange={handleInputChange}
+                      accept="image/png,image/jpeg,image/gif"
                       className="w-full p-4 bg-gray-800/50 border border-gray-600/50 rounded-2xl text-white placeholder-gray-500 focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 focus:bg-gray-800/70 transition-all duration-300 group-hover:border-gray-500/70"
-                      placeholder="https://example.com/foto.jpg"
                     />
                   </div>
 
@@ -243,9 +288,8 @@ export default function Laporan() {
                   </button>
                 </div>
               </div>
-            </div>
+            </form>
 
-            {/* Enhanced history section */}
             <div>
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-black mb-2 bg-gradient-to-r from-cyan-300 to-emerald-300 bg-clip-text text-transparent">
@@ -280,17 +324,16 @@ export default function Laporan() {
                           style={{ animationDelay: `${index * 100}ms` }}
                         >
                           <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-                            {item.foto_url && (
+                            {item.foto_path && (
                               <div className="flex-shrink-0">
                                 <img
-                                  src={item.foto_url}
+                                  src={`https://wwuorklatnmvtkhsjkzt.supabase.co/storage/v1/object/public/laporan-foto/${item.foto_path}`}
                                   alt="Laporan"
                                   className="w-full lg:w-48 h-48 object-cover rounded-xl border border-gray-600/50 group-hover:border-gray-500/70 transition-all duration-300"
                                   onError={(e) => (e.target.src = '/path/to/fallback-image.jpg')}
                                 />
                               </div>
                             )}
-                            
                             <div className="flex-1 min-w-0">
                               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                                 <div>
@@ -303,23 +346,20 @@ export default function Laporan() {
                                     <span className="font-medium">{item.jenis_sampah}</span>
                                   </div>
                                 </div>
-                                
                                 <div className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
-                                  item.status === 'Processed' 
+                                  item.status === 'diverifikasi' 
                                     ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
-                                  item.status === 'Under Review' 
+                                  item.status === 'menunggu' 
                                     ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
-                                    'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                                    'bg-red-500/20 text-red-300 border border-red-500/30'
                                 }`}>
                                   {getStatusIcon(item.status)}
                                   <span className="ml-2">{item.status}</span>
                                 </div>
                               </div>
-                              
                               <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
                                 <p className="text-gray-300 leading-relaxed">{item.deskripsi}</p>
                               </div>
-                              
                               {item.created_at && (
                                 <div className="flex items-center text-gray-500 text-sm mt-4">
                                   <Clock className="w-4 h-4 mr-2" />
@@ -344,7 +384,6 @@ export default function Laporan() {
           </div>
         </main>
       </div>
-      
       <FooterUser />
     </div>
   );
