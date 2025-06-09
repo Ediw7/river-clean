@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Camera, MapPin, Trash2, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-
-
-// Mock components for demonstration
-const HeaderUser = () => <div className="fixed top-0 left-0 right-0 h-16 bg-gray-900/80 backdrop-blur-md border-b border-gray-700/50 z-50"></div>;
-const FooterUser = () => <div className="h-16 bg-gray-900/80 backdrop-blur-md border-t border-gray-700/50"></div>;
+import HeaderUser from '../../components/user/HeaderUser';
+import FooterUser from '../../components/user/FooterUser';
 
 export default function Laporan() {
   const [formData, setFormData] = useState({
@@ -98,6 +95,7 @@ export default function Laporan() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 text-white flex items-center justify-center relative overflow-hidden">
+          <HeaderUser />
         <div className="absolute inset-0">
           <div className="absolute top-20 left-20 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-20 right-20 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -116,6 +114,7 @@ export default function Laporan() {
             </button>
           </div>
         </div>
+        <FooterUser />
       </div>
     );
   }
