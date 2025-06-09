@@ -51,15 +51,24 @@ export default function TambahPeta() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { error } = await supabase.from('peta_status').insert([{
+      // Pastikan konversi tipe data yang benar untuk Supabase
+      const payload = {
         lokasi: formData.lokasi,
         status: formData.status,
         jenis_limbah: formData.jenis_limbah || null,
-        heatmap_intensity: parseInt(formData.heatmap_intensity),
-        latitude: parseFloat(formData.latitude),
-        longitude: parseFloat(formData.longitude),
-      }]);
-      if (error) throw error;
+        heatmap_intensity: parseInt(formData.heatmap_intensity, 10), // Pastikan integer
+        latitude: parseFloat(formData.latitude),                     // Pastikan float
+        longitude: parseFloat(formData.longitude),                   // Pastikan float
+      };
+
+      const { error } = await supabase.from('peta_status').insert([payload]);
+      if (error) {
+        console.error("Supabase INSERT error:", error);
+        console.error("Error message:", error.message);
+        console.error("Error details:", error.details);
+        console.error("Error hint:", error.hint);
+        throw error;
+      }
       navigate('/admin/peta', { state: { success: 'Lokasi berhasil ditambahkan!' } });
     } catch (err) {
       setError('Gagal menambahkan data: ' + err.message);
@@ -170,7 +179,7 @@ export default function TambahPeta() {
                     onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
                     className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
                     placeholder="Contoh: -6.1745"
-                    step="any"
+                    step="any" // Memungkinkan angka desimal
                     required
                   />
                 </div>
@@ -182,7 +191,7 @@ export default function TambahPeta() {
                     onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
                     className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
                     placeholder="Contoh: 106.8227"
-                    step="any"
+                    step="any" // Memungkinkan angka desimal
                     required
                   />
                 </div>
@@ -196,9 +205,11 @@ export default function TambahPeta() {
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-500/25"
+                    // Menggunakan gaya gradien yang konsisten dengan tombol Login
+                    className="group relative px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
                   >
-                    Simpan
+                    <span className="relative z-10">Simpan Lokasi</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </button>
                 </div>
               </form>
