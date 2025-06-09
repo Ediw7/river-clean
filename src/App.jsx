@@ -16,7 +16,6 @@ import TambahTantangan from './pages/admin/TambahTantangan';
 import KelolaCompanion from './pages/admin/KelolaCompanion';
 
 import UserDashboard from './pages/user/Dashboard';
-import Forum from './pages/user/Forum';
 import Laporan from './pages/user/Laporan';
 import Peta from './pages/user/Peta';
 import Acara from './pages/user/Acara';
@@ -149,14 +148,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/user/forum"
-          element={
-            <ProtectedRoute allowedRole="user">
-              <Forum />
-            </ProtectedRoute>
-          }
-        />
+      
         <Route
           path="/user/tantangan"
           element={

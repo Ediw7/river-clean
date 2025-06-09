@@ -25,7 +25,7 @@ export default function HeaderUser() {
     { name: 'Tantangan', icon: MapPin, path: '/user/tantangan' },
     { name: 'Companion', icon: MessageCircle, path: '/user/companion' },
     { name: 'PesanDigital', icon: Camera, path: '/user/pesandigital' },
-    { name: 'Forum', icon: MessageCircle, path: '/user/forum' },
+
   ];
 
   return (
