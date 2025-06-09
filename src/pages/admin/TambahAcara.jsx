@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import HeaderAdmin from '../../components/admin/HeaderAdmin';
 import SidebarAdmin from '../../components/admin/SidebarAdmin';
 import FooterAdmin from '../../components/admin/FooterAdmin';
-import { Plus, Calendar } from 'lucide-react';
+import { Plus, Calendar, AlertTriangle } from 'lucide-react'; // Tambah AlertTriangle
 
 export default function TambahAcara() {
   const navigate = useNavigate();
@@ -12,17 +12,18 @@ export default function TambahAcara() {
     judul: '',
     lokasi: '',
     tanggal: '',
+    waktu: '', // Tambah field waktu
+    no_cp: '', // Tambah field no_cp
     deskripsi: '',
-    poster_url: '',
   });
-  const [error, setError] = useState('');
+  const [posterFile, setPosterFile] = useState(null); // State untuk file poster yang akan diupload
+  const [error, setError] = useState(null); // Ubah initial state error ke null
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('Current user:', user);
       if (!user) {
-        setError('Silakan login terlebih dahulu');
+        setError('Silakan login terlebih dahulu.'); // Ubah pesan error
         navigate('/login');
         return;
       }
@@ -50,21 +51,55 @@ export default function TambahAcara() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null); // Reset error setiap submit
+    
+    let posterUrl = null;
     try {
-      console.log('Inserting data into acara_pembersihan...');
+      // 1. Upload poster ke Supabase Storage jika ada file
+      if (posterFile) {
+        const fileExtension = posterFile.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExtension}`; // Nama file unik
+        const filePath = `posters/${fileName}`; // Folder 'posters' di bucket Anda
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('acara-posters') // Ganti dengan nama bucket storage Anda
+          .upload(filePath, posterFile, {
+            cacheControl: '3600',
+            upsert: false // Jangan menimpa jika nama file sudah ada (gunakan nama unik)
+          });
+
+        if (uploadError) {
+          console.error('Supabase Storage Upload Error:', uploadError);
+          throw new Error('Gagal mengunggah poster: ' + uploadError.message);
+        }
+
+        // Dapatkan URL publik dari poster yang diunggah
+        const { data: publicUrlData } = supabase.storage
+          .from('acara-posters')
+          .getPublicUrl(filePath);
+        posterUrl = publicUrlData.publicUrl;
+      }
+
+      // 2. Insert data acara ke database
       const { error: insertError } = await supabase.from('acara_pembersihan').insert([{
         judul: formData.judul,
         lokasi: formData.lokasi,
         tanggal: formData.tanggal,
+        waktu: formData.waktu || null,     // Waktu bisa null jika tidak diisi
+        no_cp: formData.no_cp || null,     // No. CP bisa null jika tidak diisi
         deskripsi: formData.deskripsi || null,
-        poster_url: formData.poster_url || null,
+        poster_url: posterUrl,             // Gunakan URL poster yang sudah diupload
         updated_at: new Date().toISOString(),
       }]);
+
       if (insertError) {
-        console.error('Insert error:', insertError);
+        console.error('Supabase Insert Error:', insertError);
+        console.error('Pesan error Supabase:', insertError.message);
+        console.error('Detail error Supabase:', insertError.details);
+        console.error('Hint error Supabase:', insertError.hint);
         throw insertError;
       }
-      console.log('Data inserted successfully');
+
       navigate('/admin/acara', { state: { success: 'Acara berhasil ditambahkan!' } });
     } catch (err) {
       setError('Gagal menyimpan acara: ' + err.message);
@@ -76,7 +111,7 @@ export default function TambahAcara() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-blue-50/30 to-cyan-50/50 flex items-center justify-center">
         <div className="text-center p-8 bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Calendar className="w-8 h-8 text-red-600" />
+            <AlertTriangle className="w-8 h-8 text-red-600" /> {/* Menggunakan AlertTriangle */}
           </div>
           <p className="text-red-600 mb-4 font-medium">{error}</p>
           <button
@@ -118,7 +153,11 @@ export default function TambahAcara() {
                 </div>
               </div>
             </div>
-            {error && <p className="text-red-600 mb-6 font-medium text-center">{error}</p>}
+            {error && ( // Tampilkan error di bawah header jika ada
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-6 text-center">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
             <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -154,6 +193,26 @@ export default function TambahAcara() {
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Waktu (Opsional)</label>
+                  <input
+                    type="time"
+                    value={formData.waktu}
+                    onChange={(e) => setFormData({ ...formData, waktu: e.target.value })}
+                    className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
+                    placeholder="Contoh: 09:00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Nomor Kontak Person (Opsional)</label>
+                  <input
+                    type="text"
+                    value={formData.no_cp}
+                    onChange={(e) => setFormData({ ...formData, no_cp: e.target.value })}
+                    className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
+                    placeholder="Contoh: +628123456789"
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Deskripsi (Opsional)</label>
                   <textarea
                     value={formData.deskripsi}
@@ -163,14 +222,19 @@ export default function TambahAcara() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">URL Poster (Opsional)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Upload Poster (Opsional)</label>
                   <input
-                    type="url"
-                    value={formData.poster_url}
-                    onChange={(e) => setFormData({ ...formData, poster_url: e.target.value })}
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
-                    placeholder="Contoh: https://example.com/poster.jpg"
+                    type="file"
+                    accept="image/*" // Hanya menerima file gambar
+                    onChange={(e) => setPosterFile(e.target.files[0])}
+                    className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
+                  {posterFile && ( // Tampilkan preview poster jika ada file yang dipilih
+                    <div className="mt-4 text-center">
+                        <img src={URL.createObjectURL(posterFile)} alt="Poster Preview" className="max-h-48 mx-auto rounded-lg shadow-md" />
+                        <p className="text-xs text-slate-500 mt-2">Pratinjau poster</p>
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-end space-x-3">
                   <button
@@ -182,9 +246,10 @@ export default function TambahAcara() {
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-500/25"
+                    className="group relative px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
                   >
-                    Simpan
+                    <span className="relative z-10">Simpan Acara</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </button>
                 </div>
               </form>
