@@ -22,7 +22,7 @@ export default function HeaderUser() {
     { name: 'Laporan', icon: Camera, path: '/user/laporan' },
     { name: 'Peta', icon: MapPin, path: '/user/peta' },
     { name: 'Acara', icon: BookOpen, path: '/user/acara' },
-    { name: 'Tantangan', icon: MapPin, path: '/user/tantangan' },
+    // { name: 'Tantangan', icon: MapPin, path: '/user/tantangan' },
     { name: 'Companion', icon: MessageCircle, path: '/user/companion' },
     { name: 'PesanDigital', icon: Camera, path: '/user/pesandigital' },
 
