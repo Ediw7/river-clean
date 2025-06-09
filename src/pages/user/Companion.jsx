@@ -13,6 +13,10 @@ export default function Companion() {
   const [isFeeding, setIsFeeding] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
+  const [adopsiModal, setAdopsiModal] = useState({ open: false, nama: '', jenis: 'ikan' });
+  const [adopsiLoading, setAdopsiLoading] = useState(false);
+  const [adopsiError, setAdopsiError] = useState(null);
+
   const fetchCompanionData = useCallback(async (userId) => {
     if (!userId) {
       setLoading(false);
@@ -58,23 +62,33 @@ export default function Companion() {
     initializePage();
   }, [navigate, fetchCompanionData]);
 
-  const handleAdopsi = async () => {
-    if (!currentUser) {
-        alert('Anda harus login untuk mengadopsi companion.');
-        navigate('/login');
+  const handleAdopsiSubmit = async (e) => {
+    e.preventDefault();
+    setAdopsiLoading(true);
+    setAdopsiError(null);
+
+    if (!adopsiModal.nama.trim()) {
+        setAdopsiError('Nama companion wajib diisi.');
+        setAdopsiLoading(false);
         return;
     }
-    if (companion && !window.confirm('Adopsi companion baru akan menggantikan yang lama. Lanjutkan?')) {
+    if (adopsiModal.nama.trim().length < 3) { // Validasi nama minimal 3 karakter
+        setAdopsiError('Nama companion minimal 3 karakter.');
+        setAdopsiLoading(false);
         return;
     }
-    setLoading(true);
-    setError(null);
+
     try {
+      if (companion && !window.confirm('Adopsi companion baru akan menggantikan yang lama. Lanjutkan?')) {
+        setAdopsiLoading(false);
+        return;
+      }
+
       if (companion) {
           const { error: deleteError } = await supabase
             .from('river_companion')
             .delete()
-            .eq('user_id', currentUser.id); // Hapus berdasarkan user_id, bukan companion.id
+            .eq('user_id', currentUser.id);
           if (deleteError) {
               console.warn('Gagal menghapus companion lama:', deleteError.message);
           }
@@ -82,13 +96,12 @@ export default function Companion() {
 
       const newCompanionData = {
         user_id: currentUser.id,
-        nama: 'Ikan Kecil',
-        jenis: 'ikan',
+        nama: adopsiModal.nama.trim(),
+        jenis: adopsiModal.jenis,
         kesehatan: 100,
-        warna: 'biru',
         level: 1,
         exp: 0,
-        emoticon: '🐟',
+        // emoticon dan warna dihapus
         last_activity: new Date().toISOString(),
       };
       const { data: insertedCompanion, error: insertError } = await supabase
@@ -101,16 +114,19 @@ export default function Companion() {
 
       setCompanion(insertedCompanion);
       alert('Selamat! Anda telah mengadopsi companion baru!');
+      setAdopsiModal({ open: false, nama: '', jenis: 'ikan' });
 
     } catch (err) {
-      setError('Gagal mengadopsi companion: ' + (err.message || 'Unknown error'));
+      setAdopsiError('Gagal mengadopsi companion: ' + (err.message || 'Unknown error'));
       console.error('Adoption error:', err);
     } finally {
-      setLoading(false);
+      setAdopsiLoading(false);
     }
   };
 
   const handlePerawatan = async () => {
+    const EXP_TO_NEXT_LEVEL_DISPLAY = 50;
+
     if (!companion || isFeeding || companion.kesehatan >= 100) return;
     setIsFeeding(true);
     setError(null);
@@ -118,7 +134,21 @@ export default function Companion() {
     const originalCompanion = { ...companion };
 
     const newKesehatanOptimistic = Math.min(companion.kesehatan + 20, 100);
-    setCompanion(prev => ({ ...prev, kesehatan: newKesehatanOptimistic }));
+    const newExpOptimistic = companion.exp + 10;
+    let newLevelOptimistic = companion.level;
+    let newExpRemainderOptimistic = newExpOptimistic;
+
+    while (newExpRemainderOptimistic >= EXP_TO_NEXT_LEVEL_DISPLAY) {
+        newLevelOptimistic += 1;
+        newExpRemainderOptimistic -= EXP_TO_NEXT_LEVEL_DISPLAY;
+    }
+
+    setCompanion(prev => ({
+        ...prev,
+        kesehatan: newKesehatanOptimistic,
+        exp: newExpRemainderOptimistic,
+        level: newLevelOptimistic,
+    }));
 
     try {
       const { error: updateError } = await supabase
@@ -133,6 +163,8 @@ export default function Companion() {
 
       alert('Companion berhasil dirawat! Kesehatan meningkat.');
 
+      await fetchCompanionData(currentUser.id);
+
     } catch (err) {
       setError('Gagal merawat companion: ' + (err.message || 'Unknown error'));
       console.error('Care error:', err);
@@ -142,15 +174,8 @@ export default function Companion() {
     }
   };
 
-  const getCompanionColor = (warna) => {
-    switch (warna?.toLowerCase()) {
-      case 'biru': return 'from-blue-400 to-blue-600';
-      case 'hijau': return 'from-green-400 to-green-600';
-      case 'kuning': return 'from-yellow-400 to-yellow-600';
-      case 'emas': return 'from-amber-400 to-amber-600';
-      default: return 'from-gray-400 to-gray-600';
-    }
-  };
+  // Dihapus: Fungsi getCompanionColor
+  // Warna companion sekarang ditentukan di JSX berdasarkan jenisnya
 
   const getHealthColor = (health) => {
     if (health >= 70) return 'bg-green-500';
@@ -249,11 +274,12 @@ export default function Companion() {
 
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div
-                          className={`w-32 h-32 rounded-full bg-gradient-to-br ${getCompanionColor(companion.warna)} 
+                          className={`w-32 h-32 rounded-full bg-gradient-to-br ${companion.jenis === 'ikan' ? 'from-blue-400 to-blue-600' : 'from-green-400 to-green-600'} 
                                     shadow-2xl flex items-center justify-center transform transition-all duration-300
                                     ${isFeeding ? 'scale-110 rotate-6' : 'hover:scale-105 animate-pulse'}`}
                         >
-                          <span className="text-6xl">{companion.emoticon}</span>
+                          {/* Emoticon berdasarkan jenis */}
+                          <span className="text-6xl">{companion.jenis === 'ikan' ? '🐟' : '🐸'}</span>
                           {companion.level >= 4 && <Crown className="absolute -top-2 -right-2 text-yellow-400" size={24} />}
                         </div>
                       </div>
@@ -266,7 +292,7 @@ export default function Companion() {
                               className="absolute w-1 h-1 bg-orange-400 rounded-full animate-bounce"
                               style={{
                                 left: `${i * 8}px`,
-                                top: `${i % 2 === 0 ? '0' : '10'}px`, // Adjust vertical position for food
+                                top: `${i % 2 === 0 ? '0' : '10'}px`,
                                 animationDelay: `${i * 0.1}s`,
                                 animationDuration: '1s',
                               }}
@@ -362,15 +388,7 @@ export default function Companion() {
                         <span className="text-gray-400">Jenis</span>
                         <span className="font-semibold capitalize text-gray-200">{companion.jenis}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Warna</span>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-4 h-4 rounded-full bg-gradient-to-br ${getCompanionColor(companion.warna)}`}
-                          ></div>
-                          <span className="font-semibold capitalize text-gray-200">{companion.warna}</span>
-                        </div>
-                      </div>
+                      {/* Dihapus: Statistik Warna */}
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Level</span>
                         <span className="font-semibold text-gray-200">{companion.level}/5</span>
@@ -400,7 +418,7 @@ export default function Companion() {
                     Adopsi companion virtual pertama kamu dan mulai petualangan di sungai yang bersih!
                   </p>
                   <button
-                    onClick={handleAdopsi}
+                    onClick={() => setAdopsiModal({ open: true, nama: '', jenis: 'ikan' })}
                     className="w-full py-4 px-6 bg-gradient-to-r from-cyan-600/30 to-blue-600/30 border border-cyan-500/50 rounded-xl text-cyan-200 font-semibold hover:from-cyan-600/40 hover:to-blue-600/40 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
                     aria-label="Adopsi Companion"
                   >
@@ -417,6 +435,60 @@ export default function Companion() {
       </div>
 
       <FooterUser />
+
+      {/* Modal Adopsi */}
+      {adopsiModal.open && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-lg w-full max-w-md p-6">
+            <h2 className="text-2xl font-bold text-cyan-300 mb-6 text-center">Adopsi Companion Baru</h2>
+            <form onSubmit={handleAdopsiSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Nama Companion *</label>
+                <input
+                  type="text"
+                  value={adopsiModal.nama}
+                  onChange={(e) => setAdopsiModal({ ...adopsiModal, nama: e.target.value })}
+                  className="w-full p-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300"
+                  placeholder="Beri nama companion kamu"
+                  required
+                />
+                {adopsiError && adopsiError.includes('Nama') && (
+                    <p className="text-red-400 text-xs mt-1 flex items-center gap-1"><AlertCircle size={12}/>{adopsiError}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Jenis</label>
+                <select
+                  value={adopsiModal.jenis}
+                  onChange={(e) => setAdopsiModal({ ...adopsiModal, jenis: e.target.value })}
+                  className="w-full p-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300"
+                >
+                  <option value="ikan">Ikan</option>
+                  <option value="katak">Katak</option>
+                </select>
+              </div>
+              {/* Warna dan Emoticon Dihapus dari Form Adopsi */}
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setAdopsiModal({ open: false, nama: '', jenis: 'ikan' })}
+                  className="px-6 py-2 bg-gray-700/50 text-gray-300 rounded-lg font-medium hover:bg-gray-600/50 transition-colors duration-200"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={adopsiLoading}
+                  className="px-6 py-2 bg-gradient-to-r from-cyan-600/30 to-blue-600/30 border border-cyan-500/50 rounded-lg text-white font-semibold hover:from-cyan-600/40 hover:to-blue-600/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {adopsiLoading ? <Loader2 className="animate-spin w-4 h-4" /> : <Heart size={16} />}
+                  <span>Adopsi!</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

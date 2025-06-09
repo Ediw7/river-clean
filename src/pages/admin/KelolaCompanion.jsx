@@ -13,13 +13,14 @@ export default function KelolaCompanion() {
     nama: '',
     jenis: 'ikan',
     kesehatan: 100,
-    warna: '',
-    emoticon: '🐟',
+    // warna: '', // Dihapus
+    // emoticon: '🐟', // Dihapus
   });
   const [companions, setCompanions] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // editModal akan menyesuaikan data secara dinamis
   const [editModal, setEditModal] = useState({ open: false, data: null });
 
   const fetchData = useCallback(async () => {
@@ -34,13 +35,11 @@ export default function KelolaCompanion() {
         nama,
         jenis,
         kesehatan,
-        warna,
         level,
         exp,
-        emoticon,
         user_id,
         users (email)
-      `).order('created_at', { ascending: false });
+      `).order('created_at', { ascending: false }); // Hapus warna dan emoticon dari select
       if (companionsError) throw companionsError;
       setCompanions(companionsData || []);
 
@@ -95,8 +94,8 @@ export default function KelolaCompanion() {
         ...formData,
         id: tempId,
         users: { email: newUserEmail },
-        level: 1,
-        exp: 0,
+        level: 1, // Default dari DB
+        exp: 0,   // Default dari DB
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
     };
@@ -108,8 +107,8 @@ export default function KelolaCompanion() {
         nama: formData.nama,
         jenis: formData.jenis,
         kesehatan: parseInt(formData.kesehatan, 10),
-        warna: formData.warna || null,
-        emoticon: formData.emoticon,
+        // warna: formData.warna || null, // Dihapus
+        // emoticon: formData.emoticon, // Dihapus
       }]);
       if (insertError) {
         console.error('Supabase INSERT error:', insertError);
@@ -120,7 +119,7 @@ export default function KelolaCompanion() {
       }
 
       await fetchData();
-      setFormData({ user_id: '', nama: '', jenis: 'ikan', kesehatan: 100, warna: '', emoticon: '🐟' });
+      setFormData({ user_id: '', nama: '', jenis: 'ikan', kesehatan: 100 }); // Reset formData
       setError('Companion berhasil ditambahkan!');
       setTimeout(() => setError(null), 3000);
     } catch (err) {
@@ -129,16 +128,15 @@ export default function KelolaCompanion() {
     }
   };
 
-  // Handler untuk mengedit companion (FOKUS PERBAIKAN DI SINI)
-  const handleEdit = async () => {
-    const { id, user_id, nama, jenis, kesehatan, warna, emoticon } = editModal.data;
-    const originalCompanions = [...companions]; // Simpan state asli
 
-    // Optimistic UI Update: Update tampilan di frontend segera
+  const handleEdit = async () => {
+    const { id, user_id, nama, jenis, kesehatan, level, exp } = editModal.data; // Hapus warna, emoticon
+    const originalCompanions = [...companions];
+
     const newUserEmail = users.find(u => u.id === user_id)?.email || 'Unknown User';
     const updatedCompanionItem = {
       ...editModal.data,
-      users: { email: newUserEmail }, // Pastikan email user terupdate di frontend
+      users: { email: newUserEmail },
       updated_at: new Date().toISOString(),
     };
     setCompanions(prev =>
@@ -146,7 +144,6 @@ export default function KelolaCompanion() {
         comp.id === id ? { ...comp, ...updatedCompanionItem } : comp
       )
     );
-    // Hapus setEditModal({ open: false, data: null }); dari sini!
 
     try {
       const { error: updateError } = await supabase
@@ -156,8 +153,10 @@ export default function KelolaCompanion() {
           nama,
           jenis,
           kesehatan: parseInt(kesehatan, 10),
-          warna: warna || null,
-          emoticon,
+          // warna: warna || null, // Dihapus
+          // emoticon: emoticon, // Dihapus
+          // Level dan Exp di sini hanya dibaca dari editModal.data, tidak di-update
+          // karena mereka di-update oleh trigger di database
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);
@@ -170,15 +169,13 @@ export default function KelolaCompanion() {
         throw updateError;
       }
 
-      // Jika berhasil, baru tutup modal
       setEditModal({ open: false, data: null });
-      setError('Companion berhasil diperbarui!'); // Pesan sukses
+      setError('Companion berhasil diperbarui!');
       setTimeout(() => setError(null), 3000);
 
     } catch (err) {
       setError('Gagal mengedit companion: ' + err.message);
-      setCompanions(originalCompanions); // Rollback UI jika terjadi error
-      // Buka kembali modal dengan data asli jika gagal
+      setCompanions(originalCompanions);
       setEditModal({ open: true, data: originalCompanions.find(c => c.id === id) });
     }
   };
@@ -198,7 +195,7 @@ export default function KelolaCompanion() {
           console.error('Hint error Supabase:', deleteError.hint);
           throw deleteError;
         }
-        setError('Companion berhasil dihapus!'); // Pesan sukses
+        setError('Companion berhasil dihapus!');
         setTimeout(() => setError(null), 3000);
       } catch (err) {
         setError('Gagal menghapus companion: ' + err.message);
@@ -309,32 +306,7 @@ export default function KelolaCompanion() {
                       required
                     />
                   </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Warna (Opsional)</label>
-                    <input
-                      type="text"
-                      value={formData.warna}
-                      onChange={(e) => setFormData({ ...formData, warna: e.target.value })}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
-                      placeholder="Contoh: Merah, Biru"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Emoticon</label>
-                    <select
-                      value={formData.emoticon}
-                      onChange={(e) => setFormData({ ...formData, emoticon: e.target.value })}
-                      className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
-                    >
-                      <option value="🐟">🐟 (Ikan)</option>
-                      <option value="🐠">🐠 (Ikan Tropis)</option>
-                      <option value="🦈">🦈 (Hiu)</option>
-                      <option value="🐸">🐸 (Katak)</option>
-                      <option value="🐢">🐢 (Kura-kura)</option>
-                      <option value="🦎">🦎 (Kadal)</option>
-                      <option value="🐾">🐾 (Default)</option>
-                    </select>
-                  </div>
+                  {/* Warna dan Emoticon Dihapus dari Form */}
                   <div className="flex justify-end space-x-4">
                     <button
                       type="submit"
@@ -346,7 +318,8 @@ export default function KelolaCompanion() {
                 </form>
                 <div className="w-full md:w-1/2 flex items-center justify-center">
                   <div className="relative w-64 h-64 bg-gradient-to-br from-blue-100 to-green-100 rounded-xl shadow-lg p-4 flex items-center justify-center">
-                    <span className="text-8xl animate-bounce">{formData.emoticon}</span>
+                    {/* Tampilkan emoticon default Fish */}
+                    <span className="text-8xl animate-bounce">🐟</span>
                     <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center text-gray-700 font-semibold">
                       {formData.nama || 'Nama Companion'}
                     </div>
@@ -377,7 +350,7 @@ export default function KelolaCompanion() {
                       className="bg-gradient-to-br from-blue-50/70 to-green-50/70 rounded-lg shadow-md p-4 hover:shadow-xl transition duration-300 transform hover:-translate-y-2"
                     >
                       <div className="w-full h-40 flex items-center justify-center bg-gray-100/80 rounded-lg">
-                        <span className="text-6xl">{comp.emoticon}</span>
+                        <span className="text-6xl">{comp.jenis === 'ikan' ? '🐟' : '🐸'}</span> {/* Tampilkan emoticon berdasarkan jenis */}
                       </div>
                       <h3 className="text-xl font-semibold text-gray-800 mt-2">{comp.nama}</h3>
                       <p className="text-gray-600">Jenis: {comp.jenis}</p>
@@ -440,7 +413,7 @@ export default function KelolaCompanion() {
                 <input
                   type="text"
                   value={editModal.data.nama}
-                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, nama: e.target.value } })} // PERBAIKAN DI SINI
+                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, nama: e.target.value } })}
                   className="w-full p-3 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
                   placeholder="Nama Companion"
                   required
@@ -451,7 +424,7 @@ export default function KelolaCompanion() {
                 <label className="block text-sm font-medium text-slate-700 mb-2">Jenis Companion</label>
                 <select
                   value={editModal.data.jenis}
-                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, jenis: e.target.value } })} // PERBAIKAN DI SINI
+                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, jenis: e.target.value } })}
                   className="w-full p-3 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
                 >
                   <option value="ikan">Ikan</option>
@@ -464,7 +437,7 @@ export default function KelolaCompanion() {
                 <input
                   type="number"
                   value={editModal.data.kesehatan}
-                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, kesehatan: Math.min(100, Math.max(0, e.target.value)) } })} // PERBAIKAN DI SINI
+                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, kesehatan: Math.min(100, Math.max(0, e.target.value)) } })}
                   className="w-full p-3 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
                   min="0"
                   max="100"
@@ -472,33 +445,7 @@ export default function KelolaCompanion() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Warna (Opsional)</label>
-                <input
-                  type="text"
-                  value={editModal.data.warna || ''}
-                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, warna: e.target.value } })} // PERBAIKAN DI SINI
-                  className="w-full p-3 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
-                  placeholder="Warna (Opsional)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Emoticon</label>
-                <select
-                  value={editModal.data.emoticon}
-                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, emoticon: e.target.value } })} // PERBAIKAN DI SINI
-                  className="w-full p-3 border border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
-                >
-                  <option value="🐟">🐟 (Ikan)</option>
-                  <option value="🐠">🐠 (Ikan Tropis)</option>
-                  <option value="🦈">🦈 (Hiu)</option>
-                  <option value="🐸">🐸 (Katak)</option>
-                  <option value="🐢">🐢 (Kura-kura)</option>
-                  <option value="🦎">🦎 (Kadal)</option>
-                  <option value="🐾">🐾 (Default)</option>
-                </select>
-              </div>
+              {/* Warna dan Emoticon Dihapus dari Form Edit */}
             </div>
 
             <div className="flex justify-end space-x-3 mt-6">
