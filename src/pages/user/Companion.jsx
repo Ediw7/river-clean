@@ -1,89 +1,154 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Heart, Star, Sparkles, Fish, Gift, Activity, Crown, Loader2, AlertCircle } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import HeaderUser from '../../components/user/HeaderUser';
 import FooterUser from '../../components/user/FooterUser';
 
-
 export default function Companion() {
+  const navigate = useNavigate();
   const [companion, setCompanion] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFeeding, setIsFeeding] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  useEffect(() => {
-    // Simulate fetching companion data (e.g., from Supabase)
-    setLoading(true);
-    setTimeout(() => {
-      // Mock: No companion initially
+  const fetchCompanionData = useCallback(async (userId) => {
+    if (!userId) {
       setLoading(false);
-    }, 1000);
-  }, []);
-
-  const handleAdopsi = async () => {
-    if (companion) {
-      if (!window.confirm('Adopsi companion baru akan menggantikan yang lama. Lanjutkan?')) return;
+      setCompanion(null);
+      return;
     }
     setLoading(true);
+    setError(null);
     try {
-      const newCompanion = {
+      const { data, error: fetchError } = await supabase
+        .from('river_companion')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError && fetchError.code === 'PGRST116') {
+          setCompanion(null);
+      } else if (fetchError) {
+          throw fetchError;
+      } else {
+          setCompanion(data);
+      }
+    } catch (err) {
+      setError('Gagal memuat companion: ' + (err.message || 'Unknown error'));
+      console.error('Error fetching companion:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const initializePage = async () => {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      setCurrentUser(user);
+      await fetchCompanionData(user.id);
+    };
+
+    initializePage();
+  }, [navigate, fetchCompanionData]);
+
+  const handleAdopsi = async () => {
+    if (!currentUser) {
+        alert('Anda harus login untuk mengadopsi companion.');
+        navigate('/login');
+        return;
+    }
+    if (companion && !window.confirm('Adopsi companion baru akan menggantikan yang lama. Lanjutkan?')) {
+        return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      if (companion) {
+          const { error: deleteError } = await supabase
+            .from('river_companion')
+            .delete()
+            .eq('user_id', currentUser.id); // Hapus berdasarkan user_id, bukan companion.id
+          if (deleteError) {
+              console.warn('Gagal menghapus companion lama:', deleteError.message);
+          }
+      }
+
+      const newCompanionData = {
+        user_id: currentUser.id,
         nama: 'Ikan Kecil',
         jenis: 'ikan',
         kesehatan: 100,
         warna: 'biru',
         level: 1,
         exp: 0,
+        emoticon: '🐟',
         last_activity: new Date().toISOString(),
       };
-      setCompanion(newCompanion);
-      // Mock Supabase save
-      // await supabase.from('companions').insert(newCompanion);
+      const { data: insertedCompanion, error: insertError } = await supabase
+        .from('river_companion')
+        .insert([newCompanionData])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      setCompanion(insertedCompanion);
+      alert('Selamat! Anda telah mengadopsi companion baru!');
+
     } catch (err) {
-      setError('Gagal mengadopsi companion: ' + err.message);
+      setError('Gagal mengadopsi companion: ' + (err.message || 'Unknown error'));
+      console.error('Adoption error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handlePerawatan = async () => {
-    if (!companion) return;
+    if (!companion || isFeeding || companion.kesehatan >= 100) return;
     setIsFeeding(true);
+    setError(null);
+
+    const originalCompanion = { ...companion };
+
+    const newKesehatanOptimistic = Math.min(companion.kesehatan + 20, 100);
+    setCompanion(prev => ({ ...prev, kesehatan: newKesehatanOptimistic }));
+
     try {
-      const newKesehatan = Math.min(companion.kesehatan + 20, 100);
-      let newLevel = companion.level;
-      let newWarna = companion.warna;
-      let newExp = companion.exp + 10;
+      const { error: updateError } = await supabase
+        .from('river_companion')
+        .update({
+          kesehatan: newKesehatanOptimistic,
+          last_activity: new Date().toISOString(),
+        })
+        .eq('id', companion.id);
 
-      if (newExp >= 50) {
-        newLevel = Math.min(companion.level + 1, 5);
-        newExp = newExp % 50;
-        newWarna = newLevel === 2 ? 'hijau' : newLevel === 3 ? 'kuning' : newLevel === 4 ? 'emas' : 'biru';
-      }
+      if (updateError) throw updateError;
 
-      const updatedCompanion = {
-        ...companion,
-        kesehatan: newKesehatan,
-        exp: newExp,
-        level: newLevel,
-        warna: newWarna,
-        last_activity: new Date().toISOString(),
-      };
-      setCompanion(updatedCompanion);
-      // Mock Supabase update
-      // await supabase.from('companions').update(updatedCompanion).eq('id', companion.id);
+      alert('Companion berhasil dirawat! Kesehatan meningkat.');
+
     } catch (err) {
-      setError('Gagal merawat companion: ' + err.message);
+      setError('Gagal merawat companion: ' + (err.message || 'Unknown error'));
+      console.error('Care error:', err);
+      setCompanion(originalCompanion);
     } finally {
-      setTimeout(() => setIsFeeding(false), 2000);
+      setTimeout(() => setIsFeeding(false), 1500);
     }
   };
 
   const getCompanionColor = (warna) => {
-    switch (warna) {
+    switch (warna?.toLowerCase()) {
       case 'biru': return 'from-blue-400 to-blue-600';
       case 'hijau': return 'from-green-400 to-green-600';
       case 'kuning': return 'from-yellow-400 to-yellow-600';
-      case 'emas': return 'from-yellow-500 to-amber-600';
-      default: return 'from-blue-400 to-blue-600';
+      case 'emas': return 'from-amber-400 to-amber-600';
+      default: return 'from-gray-400 to-gray-600';
     }
   };
 
@@ -117,7 +182,7 @@ export default function Companion() {
               <h2 className="text-xl font-bold text-red-300 mb-4">Terjadi Kesalahan</h2>
               <p className="text-gray-300 mb-6">{error}</p>
               <button
-                onClick={() => setError(null)}
+                onClick={() => { setError(null); fetchCompanionData(currentUser?.id); }}
                 className="px-6 py-3 bg-gradient-to-r from-cyan-600/30 to-blue-600/30 border border-cyan-500/50 rounded-xl text-cyan-200 hover:from-cyan-600/40 hover:to-blue-600/40 transition-all duration-300 font-medium"
                 aria-label="Coba Lagi"
               >
@@ -164,12 +229,9 @@ export default function Companion() {
               </div>
             ) : companion ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Main Companion Display */}
                 <div className="lg:col-span-2">
                   <div className="bg-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-3xl shadow-2xl overflow-hidden">
-                    {/* Aquarium Background */}
                     <div className="relative h-80 bg-gradient-to-b from-cyan-900/50 to-blue-900/50 overflow-hidden">
-                      {/* Water bubbles animation */}
                       <div className="absolute inset-0">
                         {[...Array(6)].map((_, i) => (
                           <div
@@ -185,19 +247,17 @@ export default function Companion() {
                         ))}
                       </div>
 
-                      {/* Companion Fish */}
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div
                           className={`w-32 h-32 rounded-full bg-gradient-to-br ${getCompanionColor(companion.warna)} 
-                                     shadow-2xl flex items-center justify-center transform transition-all duration-300
-                                     ${isFeeding ? 'scale-110 rotate-6' : 'hover:scale-105 animate-pulse'}`}
+                                    shadow-2xl flex items-center justify-center transform transition-all duration-300
+                                    ${isFeeding ? 'scale-110 rotate-6' : 'hover:scale-105 animate-pulse'}`}
                         >
-                          <Fish size={60} className="text-white" />
+                          <span className="text-6xl">{companion.emoticon}</span>
                           {companion.level >= 4 && <Crown className="absolute -top-2 -right-2 text-yellow-400" size={24} />}
                         </div>
                       </div>
 
-                      {/* Feeding animation */}
                       {isFeeding && (
                         <div className="absolute top-10 left-1/2 transform -translate-x-1/2">
                           {[...Array(5)].map((_, i) => (
@@ -206,6 +266,7 @@ export default function Companion() {
                               className="absolute w-1 h-1 bg-orange-400 rounded-full animate-bounce"
                               style={{
                                 left: `${i * 8}px`,
+                                top: `${i % 2 === 0 ? '0' : '10'}px`, // Adjust vertical position for food
                                 animationDelay: `${i * 0.1}s`,
                                 animationDuration: '1s',
                               }}
@@ -214,11 +275,9 @@ export default function Companion() {
                         </div>
                       )}
 
-                      {/* Water plants */}
                       <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-emerald-400/50 to-transparent opacity-60"></div>
                     </div>
 
-                    {/* Companion Info */}
                     <div className="p-6">
                       <div className="flex items-center justify-between mb-4">
                         <h2 className="text-2xl font-bold text-cyan-300 flex items-center gap-2">
@@ -231,7 +290,6 @@ export default function Companion() {
                         </div>
                       </div>
 
-                      {/* Health Status */}
                       <div className="mb-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-300 flex items-center gap-1">
@@ -251,7 +309,6 @@ export default function Companion() {
                         <p className="text-xs text-gray-400 mt-1">{getHealthStatus(companion.kesehatan).text}</p>
                       </div>
 
-                      {/* Experience Bar */}
                       <div className="mb-6">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-300 flex items-center gap-1">
@@ -268,7 +325,6 @@ export default function Companion() {
                         </div>
                       </div>
 
-                      {/* Warning for sick companion */}
                       {companion.kesehatan < 30 && (
                         <div className="bg-red-900/50 border border-red-700/50 rounded-xl p-4 mb-4">
                           <p className="text-red-300 font-medium flex items-center gap-2">
@@ -278,16 +334,14 @@ export default function Companion() {
                         </div>
                       )}
 
-                      {/* Action Button */}
                       <button
                         onClick={handlePerawatan}
                         disabled={companion.kesehatan >= 100 || isFeeding}
                         className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 transform flex flex-col items-center
-                                   ${
-                                     companion.kesehatan >= 100 || isFeeding
+                                    ${companion.kesehatan >= 100 || isFeeding
                                        ? 'bg-gray-600/50 cursor-not-allowed border border-gray-700/50'
                                        : 'bg-gradient-to-r from-cyan-600/30 to-blue-600/30 border border-cyan-500/50 hover:from-cyan-600/40 hover:to-blue-600/40 hover:scale-105 hover:shadow-xl'
-                                   }`}
+                                    }`}
                         aria-label={isFeeding ? 'Memberi Makan' : 'Beri Makan & Rawat'}
                       >
                         <div className="flex items-center justify-center gap-2">
@@ -300,9 +354,7 @@ export default function Companion() {
                   </div>
                 </div>
 
-                {/* Stats Panel */}
                 <div className="space-y-6">
-                  {/* Quick Stats */}
                   <div className="bg-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-lg p-6">
                     <h3 className="text-lg font-bold text-cyan-300 mb-4">Statistik</h3>
                     <div className="space-y-4">
@@ -326,7 +378,6 @@ export default function Companion() {
                     </div>
                   </div>
 
-                  {/* Tips Card */}
                   <div className="bg-gradient-to-br from-cyan-500/20 to-blue-600/20 backdrop-blur-xl border border-cyan-400/30 rounded-2xl shadow-lg p-6">
                     <h3 className="text-lg font-bold text-cyan-300 mb-3">💡 Tips Perawatan</h3>
                     <ul className="text-sm text-gray-300 space-y-2">
