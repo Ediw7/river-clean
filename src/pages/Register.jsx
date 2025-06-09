@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Droplets, Mail, Lock, UserPlus, ArrowLeft, Phone } from 'lucide-react';
+import { Droplets, Mail, Lock, UserPlus, ArrowLeft, Phone, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Register() {
@@ -9,73 +9,91 @@ export default function Register() {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [nama, setNama] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [nameValidationError, setNameValidationError] = useState(null);
+  const [formError, setFormError] = useState(null); // PERBAIKAN DI SINI: Deklarasi state formError
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser(); // Destructure with default empty object
       if (user) navigate('/user/dashboard');
     };
     checkSession();
   }, [navigate]);
 
   const validateInputs = () => {
-    if (!email.toLowerCase().endsWith('@gmail.com')) {
-      return 'Email harus berakhiran @gmail.com';
-    }
-    if (password.length < 3) {
-      return 'Kata sandi harus minimal 3 karakter';
-    }
+    setNameValidationError(null); // Reset validasi nama spesifik
+    setFormError(null); // Reset validasi form umum
+
     if (!nama.trim()) {
-      return 'Nama lengkap wajib diisi';
+      setNameValidationError('Nama lengkap wajib diisi.');
+      return false;
     }
-    return null;
+    if (nama.trim().length < 4) {
+      setNameValidationError('Nama harus lebih dari 3 karakter.');
+      return false;
+    }
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      setFormError('Email harus berakhiran @gmail.com'); // Set error umum
+      return false;
+    }
+    if (password.length < 6) {
+      setFormError('Kata sandi harus minimal 6 karakter.'); // Set error umum
+      return false;
+    }
+    return true;
   };
+
+  const handleNamaChange = (e) => {
+    const value = e.target.value;
+    setNama(value);
+    if (value.trim().length > 0 && value.trim().length < 4) {
+      setNameValidationError('Nama harus lebih dari 3 karakter.');
+    } else {
+      setNameValidationError(null);
+    }
+  };
+
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setFormError(null); // Reset error di awal submit
+
+    const isValid = validateInputs();
+    if (!isValid) {
+      setIsLoading(false);
+      return; // Hentikan proses jika validasi gagal (pesan sudah di setFormError atau setNameValidationError)
+    }
 
     try {
-      const validationError = validateInputs();
-      if (validationError) {
-        console.error(validationError);
-        setIsLoading(false);
-        return;
-      }
+      console.log('Starting Supabase Auth signUp for:', { email: email.trim(), nama: nama.trim(), whatsappNumber: whatsappNumber?.trim() || null });
 
-      console.log('Starting registration for:', { email, nama, whatsappNumber });
-
-      const { data, error: authError } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: {
-          data: {
-            nama: nama.trim(),
-            whatsapp_number: whatsappNumber?.trim() || null,
-            role: 'user'
-          }
-        }
       });
 
       if (authError) {
-        console.error('Auth Error:', authError.message);
+        console.error('Supabase Auth signUp Error:', authError.message);
+        setFormError(authError.message || 'Pendaftaran gagal. Coba lagi.'); // Set error
         setIsLoading(false);
-        navigate('/login');
+        // navigate('/login', { state: { message: authError.message || 'Pendaftaran gagal. Coba lagi.' } }); // Redirect ini bisa kita simpan jika ingin menampilkan pesan di halaman login
         return;
       }
 
-      if (!data.user) {
-        console.error('No user data returned from auth');
+      if (!authData.user) {
+        console.log('User needs email verification. Auth data:', authData);
+        setFormError('Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi dan login.'); // Set error
         setIsLoading(false);
-        navigate('/login');
+        // navigate('/login', { state: { message: 'Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi dan login.' } }); // Redirect
         return;
       }
 
-      console.log('Auth successful, user ID:', data.user.id);
+      console.log('Auth signUp successful, user ID:', authData.user.id);
 
-      const userData = {
-        id: data.user.id,
+      const userDataToInsert = {
+        id: authData.user.id,
         email: email.trim(),
         nama: nama.trim(),
         whatsapp_number: whatsappNumber?.trim() || null,
@@ -84,25 +102,37 @@ export default function Register() {
         created_at: new Date().toISOString()
       };
 
-      console.log('Inserting or updating user data:', userData);
+      console.log('Attempting to upsert user data into public.users:', userDataToInsert);
 
-      // Cek apakah user sudah ada, kalau ya update saja
       const { error: upsertError } = await supabase
         .from('users')
-        .upsert(userData, { onConflict: ['id'] }); // Upsert berdasarkan id
+        .upsert(userDataToInsert, { onConflict: ['id'] });
 
       if (upsertError) {
-        console.error('Upsert Error:', upsertError.message);
+        console.error('Supabase Upsert Error into public.users:', upsertError.message);
+        setFormError('Pendaftaran berhasil, tetapi gagal menyimpan detail pengguna: ' + upsertError.message); // Set error
+        setIsLoading(false);
+        // navigate('/login', { state: { message: 'Pendaftaran berhasil, tetapi gagal menyimpan detail pengguna: ' + upsertError.message } });
+        return;
       }
 
-      navigate('/login');
+      console.log('User data successfully saved to public.users.');
+      setFormError('Pendaftaran berhasil! Silakan login.'); // Pesan sukses akhir
+      // Redirect ke login setelah sukses
+      navigate('/login', { state: { message: 'Pendaftaran berhasil! Silakan login.' } });
+
     } catch (err) {
-      console.error('Registration Error:', err);
-      navigate('/login');
+      console.error('Unexpected Registration Error:', err);
+      setFormError('Terjadi kesalahan tidak terduga: ' + (err.message || '')); // Set error
+      setIsLoading(false);
+      // navigate('/login', { state: { message: 'Terjadi kesalahan tidak terduga saat pendaftaran.' } });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const isRegisterButtonDisabled = isLoading || nama.trim().length < 3 || !email.toLowerCase().endsWith('@gmail.com') || password.length < 6;
+
 
   return (
     <div className="min-h-screen bg-slate-950 text-white relative overflow-hidden">
@@ -141,13 +171,18 @@ export default function Register() {
                   <input
                     type="text"
                     value={nama}
-                    onChange={(e) => setNama(e.target.value)}
+                    onChange={handleNamaChange}
                     className="w-full pl-4 pr-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-300"
-                    placeholder="Masukkan nama lengkap"
+                    placeholder="Masukkan nama lengkap (min. 3 karakter)"
                     required
                     disabled={isLoading}
                   />
                 </div>
+                {nameValidationError && (
+                  <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" /> {nameValidationError}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -203,9 +238,16 @@ export default function Register() {
                 </div>
               </div>
 
-              <button 
-                type="submit" 
-                disabled={isLoading}
+              {formError && ( // Tampilkan formError jika ada
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-400" />
+                  <p className="text-red-400 text-sm">{formError}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isRegisterButtonDisabled}
                 className="group relative w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 <span className="relative z-10 flex items-center justify-center space-x-2">
