@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Droplets, Mail, Lock, UserPlus, ArrowLeft } from 'lucide-react';
+import { Droplets, Mail, Lock, UserPlus, ArrowLeft, Phone } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Cek sesi untuk redirect jika sudah login
   useEffect(() => {
     const checkSession = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -17,33 +19,83 @@ export default function Register() {
     checkSession();
   }, [navigate]);
 
+  // Validasi input sederhana untuk uji coba
+  const validateInputs = () => {
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      return 'Email harus berakhiran @gmail.com';
+    }
+    if (password.length < 3) {
+      return 'Kata sandi harus minimal 3 karakter';
+    }
+    return null;
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setError(null);
-  
-    console.log('Registering with email:', email);
-    console.log('Password:', password);
-  
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { role: 'user' } }, // Tetap default sebagai 'user'
-    });
-  
-    if (error) {
-      console.log('Supabase Error:', error);
-      setError(error.message);
+
+    // Validasi input lokal
+    const validationError = validateInputs();
+    if (validationError) {
+      setError(validationError);
       return;
     }
-  
-    // Sinkronkan data ke tabel users
-    const { error: insertError } = await supabase.from('users').insert([{ email, role: 'user' }]);
-    if (insertError) {
-      setError('Gagal menyimpan data pengguna: ' + insertError.message);
-      return;
+
+    try {
+      // Sign-up dengan Supabase Auth
+      console.log('Attempting sign-up with:', { email, password }); // Debug
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role: 'user',
+            whatsapp_number: whatsappNumber || null
+          }
+        }
+      });
+
+      if (authError) {
+        console.error('Auth Error:', authError); // Debug
+        throw new Error(authError.message);
+      }
+
+      // Pastikan data.user ada
+      if (!data.user) {
+        throw new Error('Gagal mendapatkan data pengguna dari Supabase Auth');
+      }
+
+      // Sinkronkan data ke tabel users
+      const userData = {
+        id: data.user.id,
+        email,
+        whatsapp_number: whatsappNumber || null,
+        role: 'user',
+        points: 0
+      };
+      console.log('Inserting to users table:', userData); // Debug
+      const { error: insertError } = await supabase.from('users').insert(userData);
+
+      if (insertError) {
+        console.error('Insert Error:', insertError); // Debug
+        throw new Error('Gagal menyimpan data pengguna: ' + insertError.message);
+      }
+
+      // Redirect ke login
+      navigate('/login');
+    } catch (err) {
+      // Tangani error spesifik
+      if (err.message.includes('User already registered')) {
+        setError('Email sudah terdaftar. Silakan login atau gunakan email lain.');
+      } else if (err.message.includes('infinite recursion')) {
+        setError('Kesalahan konfigurasi keamanan. Silakan hubungi admin.');
+      } else if (err.message.includes('signup are disabled')) {
+        setError('Pendaftaran email dinonaktifkan. Silakan hubungi admin.');
+      } else {
+        setError(err.message || 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.');
+      }
+      console.error('Registration Error:', err); // Debug
     }
-  
-    navigate('/login');
   };
 
   return (
@@ -88,7 +140,7 @@ export default function Register() {
               {/* Email Field */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-slate-300">
-                  Email Address
+                  Alamat Email
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -99,7 +151,7 @@ export default function Register() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-300"
-                    placeholder="nama@email.com"
+                    placeholder="nama@gmail.com"
                     required
                   />
                 </div>
@@ -108,7 +160,7 @@ export default function Register() {
               {/* Password Field */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-slate-300">
-                  Password
+                  Kata Sandi
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -119,8 +171,27 @@ export default function Register() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-300"
-                    placeholder="Masukkan password"
+                    placeholder="Masukkan kata sandi"
                     required
+                  />
+                </div>
+              </div>
+
+              {/* WhatsApp Number Field */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-300">
+                  Nomor WhatsApp (Opsional)
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Phone className="w-5 h-5 text-slate-400" />
+                  </div>
+                  <input
+                    type="tel"
+                    value={whatsappNumber}
+                    onChange={(e) => setWhatsappNumber(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-300"
+                    placeholder="+6281234567890"
                   />
                 </div>
               </div>

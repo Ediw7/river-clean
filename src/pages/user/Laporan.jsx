@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Camera, MapPin, Trash2, Send, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
+
 // Mock components for demonstration
 const HeaderUser = () => <div className="fixed top-0 left-0 right-0 h-16 bg-gray-900/80 backdrop-blur-md border-b border-gray-700/50 z-50"></div>;
 const FooterUser = () => <div className="h-16 bg-gray-900/80 backdrop-blur-md border-t border-gray-700/50"></div>;
