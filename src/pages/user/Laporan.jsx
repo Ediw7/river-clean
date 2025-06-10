@@ -157,7 +157,10 @@ export default function Laporan() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 text-white flex items-center justify-center relative overflow-hidden">
+
+         <div className="fixed top-0 left-0 right-0 z-50">
         <HeaderUser />
+      </div>
         <div className="absolute inset-0">
           <div className="absolute top-20 left-20 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-20 right-20 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -194,7 +197,9 @@ export default function Laporan() {
           <div className="absolute bottom-1/3 left-1/2 w-1.5 h-1.5 bg-blue-400/50 rounded-full animate-ping delay-2000"></div>
         </div>
       </div>
-      <HeaderUser />
+       <div className="fixed top-0 left-0 right-0 z-50">
+        <HeaderUser />
+      </div>
       <div className="flex flex-1 pt-24 relative z-10">
         <main className="p-6 w-full">
           <div className="max-w-7xl mx-auto">

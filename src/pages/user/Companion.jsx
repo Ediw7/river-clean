@@ -230,7 +230,10 @@ export default function Companion() {
         <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-teal-400/15 rounded-full blur-3xl animate-pulse delay-3000"></div>
       </div>
 
-      <HeaderUser />
+      
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <HeaderUser />
+      </div>
 
       <div className="flex flex-1 pt-24 relative z-10">
         <main className="p-6 w-full">

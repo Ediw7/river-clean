@@ -24,8 +24,6 @@ export default function SidebarAdmin() {
           { name: 'Kelola Laporan', path: '/admin/laporan', icon: FileText },
           { name: 'Kelola Peta', path: '/admin/peta', icon: Map },
           { name: 'Kelola Acara', path: '/admin/acara', icon: Calendar },
-   
-          // { name: 'Kelola Tantangan', path: '/admin/tantangan', icon: Trophy },
           { name: 'Kelola Companion', path: '/admin/companion', icon: Settings },
           { name: 'Kelola Pengguna', path: '/admin/pengguna', icon: Users },
         ].map((item) => (
