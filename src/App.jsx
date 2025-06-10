@@ -19,7 +19,6 @@ import UserDashboard from './pages/user/Dashboard';
 import Laporan from './pages/user/Laporan';
 import Peta from './pages/user/Peta';
 import Acara from './pages/user/Acara';
-import Tantangan from './pages/user/Tantangan';
 import Companion from './pages/user/Companion';
 import PesanDigital from './pages/user/PesanDigital';
 
@@ -145,15 +144,6 @@ function App() {
           element={
             <ProtectedRoute allowedRole="user">
               <Acara />
-            </ProtectedRoute>
-          }
-        />
-      
-        <Route
-          path="/user/tantangan"
-          element={
-            <ProtectedRoute allowedRole="user">
-              <Tantangan />
             </ProtectedRoute>
           }
         />
