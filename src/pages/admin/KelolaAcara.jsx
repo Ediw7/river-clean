@@ -19,7 +19,7 @@ export default function KelolaAcara() {
     try {
       const { data, error: fetchError } = await supabase
         .from('acara_pembersihan')
-        .select('*') // Ambil semua kolom, termasuk link_pendaftaran
+        .select('*') 
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
@@ -32,7 +32,6 @@ export default function KelolaAcara() {
     }
   }, []);
 
-  // Check autentikasi dan panggil fetchAcara
   useEffect(() => {
     const checkAuthAndFetch = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -66,12 +65,10 @@ export default function KelolaAcara() {
     checkAuthAndFetch();
   }, [navigate, fetchAcara]);
 
-  // Handler untuk mengedit acara
   const handleEdit = async () => {
     const { id, judul, lokasi, tanggal, waktu, no_cp, deskripsi, poster_url, link_pendaftaran, newPosterFile } = editModal.data;
     const originalAcara = [...acara];
 
-    // Optimistic UI Update
     const updatedAcaraItem = {
       ...editModal.data,
       updated_at: new Date().toISOString(),
@@ -127,7 +124,7 @@ export default function KelolaAcara() {
           no_cp: no_cp || null,
           deskripsi,
           poster_url: finalPosterUrl,
-          link_pendaftaran: link_pendaftaran || null, // Update field ini
+          link_pendaftaran: link_pendaftaran || null, 
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);
@@ -153,7 +150,6 @@ export default function KelolaAcara() {
     }
   };
 
-  // Handler untuk menghapus acara
   const handleDelete = async (id, posterUrl) => {
     if (window.confirm('Yakin ingin menghapus acara ini?')) {
       const originalAcara = [...acara];

@@ -13,14 +13,12 @@ export default function KelolaCompanion() {
     nama: '',
     jenis: 'ikan',
     kesehatan: 100,
-    // warna: '', // Dihapus
-    // emoticon: '🐟', // Dihapus
+
   });
   const [companions, setCompanions] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // editModal akan menyesuaikan data secara dinamis
   const [editModal, setEditModal] = useState({ open: false, data: null });
 
   const fetchData = useCallback(async () => {
@@ -39,7 +37,7 @@ export default function KelolaCompanion() {
         exp,
         user_id,
         users (email)
-      `).order('created_at', { ascending: false }); // Hapus warna dan emoticon dari select
+      `).order('created_at', { ascending: false }); 
       if (companionsError) throw companionsError;
       setCompanions(companionsData || []);
 
@@ -94,8 +92,8 @@ export default function KelolaCompanion() {
         ...formData,
         id: tempId,
         users: { email: newUserEmail },
-        level: 1, // Default dari DB
-        exp: 0,   // Default dari DB
+        level: 1,
+        exp: 0,   
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
     };
@@ -107,8 +105,7 @@ export default function KelolaCompanion() {
         nama: formData.nama,
         jenis: formData.jenis,
         kesehatan: parseInt(formData.kesehatan, 10),
-        // warna: formData.warna || null, // Dihapus
-        // emoticon: formData.emoticon, // Dihapus
+ 
       }]);
       if (insertError) {
         console.error('Supabase INSERT error:', insertError);
@@ -119,7 +116,7 @@ export default function KelolaCompanion() {
       }
 
       await fetchData();
-      setFormData({ user_id: '', nama: '', jenis: 'ikan', kesehatan: 100 }); // Reset formData
+      setFormData({ user_id: '', nama: '', jenis: 'ikan', kesehatan: 100 }); 
       setError('Companion berhasil ditambahkan!');
       setTimeout(() => setError(null), 3000);
     } catch (err) {
@@ -130,7 +127,7 @@ export default function KelolaCompanion() {
 
 
   const handleEdit = async () => {
-    const { id, user_id, nama, jenis, kesehatan, level, exp } = editModal.data; // Hapus warna, emoticon
+    const { id, user_id, nama, jenis, kesehatan, level, exp } = editModal.data;
     const originalCompanions = [...companions];
 
     const newUserEmail = users.find(u => u.id === user_id)?.email || 'Unknown User';
@@ -153,10 +150,7 @@ export default function KelolaCompanion() {
           nama,
           jenis,
           kesehatan: parseInt(kesehatan, 10),
-          // warna: warna || null, // Dihapus
-          // emoticon: emoticon, // Dihapus
-          // Level dan Exp di sini hanya dibaca dari editModal.data, tidak di-update
-          // karena mereka di-update oleh trigger di database
+
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);
@@ -253,7 +247,7 @@ export default function KelolaCompanion() {
             {error && error.includes('berhasil') && (
               <p className="text-center text-green-600 mb-4 font-semibold animate-pulse">{error}</p>
             )}
-            {/* Form Tambah Companion */}
+   
             <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg p-6 mb-8 transform hover:scale-[1.02] transition duration-300">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Tambah Companion Baru</h2>
               <div className="flex flex-col md:flex-row gap-8">
@@ -306,7 +300,7 @@ export default function KelolaCompanion() {
                       required
                     />
                   </div>
-                  {/* Warna dan Emoticon Dihapus dari Form */}
+    
                   <div className="flex justify-end space-x-4">
                     <button
                       type="submit"
@@ -445,7 +439,6 @@ export default function KelolaCompanion() {
                 />
               </div>
 
-              {/* Warna dan Emoticon Dihapus dari Form Edit */}
             </div>
 
             <div className="flex justify-end space-x-3 mt-6">

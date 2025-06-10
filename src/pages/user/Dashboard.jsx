@@ -60,16 +60,38 @@ export default function UserDashboard() {
         upcomingEventsResponse,
         recentForumResponse
       ] = await Promise.allSettled([
-        supabase.from('laporan_pencemaran').select('id', { count: 'exact' }).eq('user_id', userId).eq('status', 'diverifikasi'),
+        supabase
+          .from('laporan_pencemaran')
+          .select('id', { count: 'exact' })
+          .eq('user_id', userId)
+          .eq('status', 'diverifikasi'),
         supabase.from('acara_pembersihan').select('id', { count: 'exact' }),
-        supabase.from('river_companion').select('nama, jenis, level, exp, kesehatan').eq('user_id', userId).single(),
+        supabase
+          .from('river_companion')
+          .select('nama, jenis, level, exp, kesehatan')
+          .eq('user_id', userId)
+          .single(),
         supabase.from('pesan_digital').select('id', { count: 'exact' }).eq('user_id', userId),
-        supabase.from('laporan_pencemaran').select('id, lokasi, jenis_sampah, deskripsi, status, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
-        supabase.from('acara_pembersihan').select('id, judul, lokasi, tanggal, waktu, no_cp, link_pendaftaran').gte('tanggal', new Date().toISOString().split('T')[0]).order('tanggal', { ascending: true }).limit(3),
-        supabase.from('pesan_digital').select('id, pesan, created_at, sender_name, pesan_replies(id)').order('created_at', { ascending: false }).limit(3),
+        supabase
+          .from('laporan_pencemaran')
+          .select('id, lokasi, jenis_sampah, deskripsi, status, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(3),
+        supabase
+          .from('acara_pembersihan')
+          .select('id, judul, lokasi, tanggal, waktu, no_cp, link_pendaftaran')
+          .gte('tanggal', new Date().toISOString().split('T')[0])
+          .order('tanggal', { ascending: true })
+          .limit(3),
+        supabase
+          .from('pesan_digital')
+          .select('id, pesan, created_at, sender_name, pesan_replies(id)')
+          .order('created_at', { ascending: false })
+          .limit(3),
       ]);
 
-      const getFulfilledResult = (response) => response.status === 'fulfilled' ? response.value : { data: null, count: 0, error: response.reason };
+      const getFulfilledResult = (response) => (response.status === 'fulfilled' ? response.value : { data: null, count: 0, error: response.reason });
       const laporanResult = getFulfilledResult(laporanResponse);
       const acaraResult = getFulfilledResult(acaraResponse);
       const companionResult = getFulfilledResult(companionResponse);
@@ -78,23 +100,24 @@ export default function UserDashboard() {
       const upcomingEventsResult = getFulfilledResult(upcomingEventsResponse);
       const recentForumResult = getFulfilledResult(recentForumResponse);
 
-      [laporanResult, acaraResult, companionResult, pesanDigitalResult, recentReportResult, upcomingEventsResult, recentForumResult].forEach(res => {
-        if (res.error && res.error.code !== 'PGRST116') { 
-            console.error('Partial data fetch error:', res.error);
-        }
-      });
-
+      if (laporanResult.error && laporanResult.error.code !== 'PGRST116') console.error('Laporan error:', laporanResult.error);
+      if (acaraResult.error && acaraResult.error.code !== 'PGRST116') console.error('Acara error:', acaraResult.error);
+      if (companionResult.error && companionResult.error.code !== 'PGRST116') console.error('Companion error:', companionResult.error);
+      if (pesanDigitalResult.error && pesanDigitalResult.error.code !== 'PGRST116') console.error('Pesan Digital error:', pesanDigitalResult.error);
+      if (recentReportResult.error && recentReportResult.error.code !== 'PGRST116') console.error('Recent Reports error:', recentReportResult.error);
+      if (upcomingEventsResult.error && upcomingEventsResult.error.code !== 'PGRST116') console.error('Upcoming Events error:', upcomingEventsResult.error);
+      if (recentForumResult.error && recentForumResult.error.code !== 'PGRST116') console.error('Recent Forum error:', recentForumResult.error);
 
       const totalLaporanDiverifikasi = laporanResult.count || 0;
       const totalAcara = acaraResult.count || 0;
       const totalPesanDigital = pesanDigitalResult.count || 0;
 
-      const companionData = companionResult.data;
-      const companionLevel = companionData?.level || 0;
-      const companionExp = companionData?.exp || 0;
-      const companionNama = companionData?.nama || 'Belum Adopsi';
-      const companionJenis = companionData?.jenis || 'ikan'; 
-      const companionKesehatan = companionData?.kesehatan || 0;
+      const companionData = companionResult.data || {};
+      const companionLevel = companionData.level || 0;
+      const companionExp = companionData.exp || 0;
+      const companionNama = companionData.nama || 'Belum Adopsi';
+      const companionJenis = companionData.jenis || 'ikan'; 
+      const companionKesehatan = companionData.kesehatan || 0;
 
       const processedRecentReports = (recentReportResult.data || []).map(report => ({
         ...report,
@@ -115,17 +138,16 @@ export default function UserDashboard() {
         time: new Date(topic.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }),
       }));
 
-
       setUserStats({
-        namaLengkap: namaLengkap,
-        totalLaporanDiverifikasi: totalLaporanDiverifikasi,
-        totalAcara: totalAcara, 
-        totalPesanDigital: totalPesanDigital,
-        companionLevel: companionLevel,
-        companionExp: companionExp,
-        companionNama: companionNama,
-        companionJenis: companionJenis,
-        companionKesehatan: companionKesehatan,
+        namaLengkap,
+        totalLaporanDiverifikasi,
+        totalAcara,
+        totalPesanDigital,
+        companionLevel,
+        companionExp,
+        companionNama,
+        companionJenis,
+        companionKesehatan,
       });
 
       setRecentReports(processedRecentReports);
@@ -168,9 +190,9 @@ export default function UserDashboard() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-gray-950 text-white flex flex-col relative overflow-x-hidden">
-         <div className="fixed top-0 left-0 right-0 z-50">
-        <HeaderUser />
-      </div>
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <HeaderUser />
+        </div>
         <div className="absolute inset-0">
           <div className="absolute top-10 left-10 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-10 right-10 w-80 h-80 bg-emerald-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -209,7 +231,6 @@ export default function UserDashboard() {
       <div className="fixed top-0 left-0 right-0 z-50">
         <HeaderUser />
       </div>
-
 
       <div className="pt-24 relative z-10">
         <section className="px-6 py-12">
@@ -285,7 +306,7 @@ export default function UserDashboard() {
                     </div>
                   ) : (
                     <div className="text-center py-4 bg-gray-800/50 rounded-xl border border-gray-700">
-                      <Fish className="w-10 h-10 text-gray-500 mx-auto mb-2" />
+                      <span className="w-10 h-10 text-gray-500 mx-auto mb-2">🐟</span>
                       <p className="text-gray-400">Belum memiliki Companion. <button onClick={() => navigate('/companion')} className="text-cyan-400 hover:underline">Adopsi sekarang!</button></p>
                     </div>
                   )}
@@ -317,7 +338,7 @@ export default function UserDashboard() {
                               {report.status}
                             </span>
                             <span className="text-xs text-gray-500">
-                              {new Date(report.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}
+                              {new Date(report.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                             </span>
                           </div>
                         </div>

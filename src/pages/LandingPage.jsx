@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom'; 
 import { Droplets, Users, MapPin, Award, ChevronDown, Play, Camera, Calendar, MessageCircle, Heart } from 'lucide-react'; // Tambah Heart jika dipakai
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function LandingPage() {
   const [scrollY, setScrollY] = useState(0);
-  const navigate = useNavigate(); // Inisialisasi useNavigate
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -16,7 +16,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white relative overflow-x-hidden">
-      {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950/20 to-cyan-950/30">
         <div className="absolute top-20 left-10 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -26,19 +25,19 @@ export default function LandingPage() {
       <Header />
 
       <main className="relative z-10">
-        {/* Hero Section */}
+
         <section className="min-h-screen flex items-center justify-center px-6 relative">
           <div 
             className="text-center max-w-6xl mx-auto"
             style={{ transform: `translateY(${scrollY * 0.1}px)` }}
           >
-            {/* Hero Badge */}
+
             <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-md border border-cyan-500/30 rounded-full px-6 py-2 mb-8 animate-pulse">
               <Droplets className="w-5 h-5 text-cyan-400" />
               <span className="text-sm font-medium text-cyan-300">Revolusi Pelestarian Sungai Indonesia</span>
             </div>
 
-            {/* Main Heading */}
+
             <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight">
               <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-emerald-400 bg-clip-text text-transparent animate-pulse">
                 River
@@ -46,7 +45,7 @@ export default function LandingPage() {
               <span className="text-white">Clean</span>
             </h1>
 
-            {/* Subtitle */}
+
             <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-4xl mx-auto leading-relaxed">
               Platform <span className="text-cyan-400 font-semibold">berbasis komunitas</span> yang memberdayakan masyarakat 
               untuk melawan pencemaran sungai melalui teknologi cerdas dan aksi nyata
@@ -55,7 +54,7 @@ export default function LandingPage() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
               <button 
-                onClick={() => navigate('/register')} // Menggunakan navigate()
+                onClick={() => navigate('/register')}
                 className="group relative px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/25"
               >
                 <span className="relative z-10">🚀 Mulai Sekarang</span>
@@ -63,7 +62,7 @@ export default function LandingPage() {
               </button>
               
               <button 
-                onClick={() => navigate('/login')} // Menggunakan navigate()
+                onClick={() => navigate('/login')} 
                 className="group px-8 py-4 bg-slate-800/50 backdrop-blur-md border border-slate-700 rounded-2xl text-lg font-semibold transition-all duration-300 hover:scale-105 hover:bg-slate-700/50 hover:border-cyan-500/50"
               >
                 <span className="flex items-center space-x-2">
@@ -73,12 +72,11 @@ export default function LandingPage() {
               </button>
             </div>
 
-            {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
               {[
                 { number: "Aktif", label: "Pengguna", icon: Users },
                 { number: "Pantau", label: "Lokasi", icon: MapPin },
-                { number: "Bersih", label: "Sungai", icon: Droplets }, // Diubah labelnya
+                { number: "Bersih", label: "Sungai", icon: Droplets },
                 { number: "Terlibat", label: "Komunitas", icon: Award }
               ].map((stat, index) => (
                 <div key={index} className="text-center group hover:scale-105 transition-transform duration-300">
@@ -92,13 +90,12 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Scroll Indicator */}
+  
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
             <ChevronDown className="w-8 h-8 text-cyan-400" />
           </div>
         </section>
 
-        {/* Features Preview */}
         <section className="py-24 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
@@ -160,7 +157,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Call to Action */}
         <section className="py-24 px-6">
           <div className="max-w-4xl mx-auto text-center">
             <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-md border border-slate-700 rounded-3xl p-12">
@@ -173,13 +169,13 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button 
-                  onClick={() => navigate('/register')} // Menggunakan navigate()
+                  onClick={() => navigate('/register')} 
                   className="px-10 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/25"
                 >
                   🌊 Daftar Gratis
                 </button>
                 <button 
-                  onClick={() => navigate('/login')} // Menggunakan navigate()
+                  onClick={() => navigate('/login')} 
                   className="px-10 py-4 bg-slate-800/50 backdrop-blur-md border border-slate-600 rounded-2xl text-lg font-semibold transition-all duration-300 hover:scale-105 hover:bg-slate-700/50"
                 >
                   Masuk Sekarang

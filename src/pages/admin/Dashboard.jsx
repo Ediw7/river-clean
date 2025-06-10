@@ -5,7 +5,7 @@ import HeaderAdmin from '../../components/admin/HeaderAdmin';
 import SidebarAdmin from '../../components/admin/SidebarAdmin';
 import { 
   FileText, Users, Calendar, Heart, MessageCircle, MapPin, Loader2, AlertCircle, 
-  ChevronRight, Phone, GitBranch, Star, Sparkles, Crown, Activity, Shield // Pastikan semua icon ada
+  ChevronRight, Phone, GitBranch, Star, Sparkles, Crown, Activity, Shield 
 } from 'lucide-react'; 
 
 export default function Dashboard() {
@@ -25,7 +25,7 @@ export default function Dashboard() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    setError(null); // Reset error di setiap awal fetch
+    setError(null); 
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -45,7 +45,7 @@ export default function Dashboard() {
         return;
       }
 
-      const allPromises = await Promise.allSettled([ // Menggunakan Promise.allSettled
+      const allPromises = await Promise.allSettled([ 
         supabase.from('laporan_pencemaran').select('id', { count: 'exact' }),
         supabase.from('acara_pembersihan').select('id', { count: 'exact' }),
         supabase.from('users').select('id', { count: 'exact' }),
@@ -68,19 +68,16 @@ export default function Dashboard() {
         supabase.from('pesan_digital').select('id, pesan_replies(id)', { count: 'exact' }).is('pesan_replies', null),
       ]);
 
-      // Proses setiap hasil promise dari Promise.allSettled
+
       const results = allPromises.map(promise => promise.status === 'fulfilled' ? promise.value : { data: null, count: 0, error: promise.reason });
 
-      // Log error dari setiap promise yang gagal (untuk debugging)
       results.forEach((res, index) => {
-        if (res.error && res.error.code !== 'PGRST116') { // Abaikan PGRST116 (no rows found)
+        if (res.error && res.error.code !== 'PGRST116') {
           console.error(`Partial data fetch error at index ${index}:`, res.error);
-          // Anda bisa mengatur error umum di sini jika ada sub-query yang gagal
-          // setError('Beberapa data gagal dimuat. Mohon coba lagi.');
+          
         }
       });
 
-      // Destrukturisasi hasil yang sudah diproses
       const [
         laporanResponse, 
         acaraResponse, 
@@ -94,7 +91,7 @@ export default function Dashboard() {
 
 
       setStats({
-        laporan: laporanResponse?.count || 0, // Pastikan ada null check
+        laporan: laporanResponse?.count || 0, 
         acara: acaraResponse?.count || 0,
         pengguna: penggunaResponse?.count || 0,
         companion: companionResponse?.count || 0,
@@ -102,7 +99,7 @@ export default function Dashboard() {
         pesanDigital: pesanDigitalResponse?.count || 0,
         pesanDigitalBelumDibalas: pesanDigitalBelumReplyResponse?.count || 0,
       });
-      setRecentActivities(recentResponse?.data || []); // Pastikan data tidak null
+      setRecentActivities(recentResponse?.data || []) 
     } catch (err) {
       setError('Gagal memuat data: ' + err.message);
       console.error('Dashboard data fetch error (top-level catch):', err);
@@ -293,30 +290,6 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                {/* Tombol Aksi Cepat */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <button
-                    onClick={() => navigate('/admin/laporan')}
-                    className="w-full bg-gradient-to-r from-blue-500 to-cyan-600 text-white p-4 rounded-2xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2"
-                  >
-                    <FileText className="w-5 h-5" />
-                    <span className="font-medium">Kelola Laporan</span>
-                  </button>
-                  <button
-                    onClick={() => navigate('/admin/kelolacompanion')}
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 rounded-2xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2"
-                  >
-                    <Heart className="w-5 h-5" />
-                    <span className="font-medium">Kelola Companion</span>
-                  </button>
-                  <button
-                    onClick={() => navigate('/admin/acara')}
-                    className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-4 rounded-2xl shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2"
-                  >
-                    <Calendar className="w-5 h-5" />
-                    <span className="font-medium">Kelola Acara</span>
-                  </button>
-                </div>
               </>
             )}
           </div>

@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import HeaderAdmin from '../../components/admin/HeaderAdmin';
 import SidebarAdmin from '../../components/admin/SidebarAdmin';
-import FooterAdmin from '../../components/admin/FooterAdmin';
-import { Users, UserCheck, UserX } from 'lucide-react';
+import FooterAdmin from '../../components/admin/FooterAdmin'; 
+import { Users, UserCheck, UserX, AlertTriangle } from 'lucide-react';
 
 export default function KelolaPengguna() {
   const navigate = useNavigate();
@@ -12,8 +12,26 @@ export default function KelolaPengguna() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('users')
+        .select('*') 
+        .order('created_at', { ascending: false });
+
+      if (fetchError) throw fetchError;
+      setPengguna(data || []);
+    } catch (err) {
+      setError('Gagal memuat pengguna: ' + err.message);
+      console.error('Error fetching users:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []); 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndFetch = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate('/login');
@@ -27,47 +45,53 @@ export default function KelolaPengguna() {
         .single();
 
       if (userError || userData?.role !== 'admin') {
+        setError('Akses ditolak. Hanya admin yang dapat mengakses halaman ini.');
         navigate('/login');
         return;
       }
-
-      try {
-        const { data } = await supabase
-          .from('users')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        setPengguna(data || []);
-      } catch (err) {
-        setError('Gagal memuat pengguna: ' + err.message);
-      } finally {
-        setLoading(false);
-      }
+      
+      await fetchData(); 
     };
 
-    checkAuth();
-  }, [navigate]);
+    checkAuthAndFetch();
+  }, [navigate, fetchData]); 
 
   const handleUbahRole = async (id, newRole) => {
+    const originalPengguna = [...pengguna]; 
+    const userIndex = pengguna.findIndex(item => item.id === id);
+    const originalUser = pengguna[userIndex];
+
+    setPengguna(prevPengguna =>
+      prevPengguna.map(item =>
+        item.id === id ? { ...item, role: newRole } : item
+      )
+    );
+
     try {
-      await supabase
+      const { error: updateError } = await supabase
         .from('users')
         .update({ role: newRole })
         .eq('id', id);
-      setPengguna(pengguna.map((item) =>
-        item.id === id ? { ...item, role: newRole } : item
-      ));
+
+      if (updateError) {
+        console.error('Supabase UPDATE role error:', updateError);
+        console.error('Pesan error Supabase:', updateError.message);
+        throw updateError;
+      }
+  
     } catch (err) {
       setError('Gagal memperbarui role: ' + err.message);
+      console.error('Error updating role:', err);
+      setPengguna(originalPengguna); 
     }
   };
 
-  if (error) {
+  if (error && !error.includes('berhasil')) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-blue-50/30 to-cyan-50/50 flex items-center justify-center">
         <div className="text-center p-8 bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Users className="w-8 h-8 text-red-600" />
+            <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
           <p className="text-red-600 mb-4 font-medium">{error}</p>
           <button
@@ -106,7 +130,7 @@ export default function KelolaPengguna() {
                   <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
                     Kelola Pengguna
                   </h1>
-                  <p className="text-slate-600">Atur dan kelola peran pengguna.</p>
+                  <p className="text-slate-600">Atur dan kelola peran pengguna di RiverClean.</p>
                 </div>
               </div>
             </div>
@@ -125,13 +149,14 @@ export default function KelolaPengguna() {
                     <div className="w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Users className="w-8 h-8 text-cyan-600" />
                     </div>
-                    <p className="text-slate-500 text-lg">Belum ada pengguna.</p>
+                    <p className="text-slate-500 text-lg">Belum ada pengguna terdaftar.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
                         <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
+                          <th className="p-4 font-semibold text-slate-700">Nama</th> 
                           <th className="p-4 font-semibold text-slate-700">Email</th>
                           <th className="p-4 font-semibold text-slate-700">Role</th>
                           <th className="p-4 font-semibold text-slate-700">Aksi</th>
@@ -141,13 +166,14 @@ export default function KelolaPengguna() {
                         {pengguna.map((item) => (
                           <tr
                             key={item.id}
-                            className={`border-b border-slate-100 hover:bg-gradient-to-r hover:from-cyan-50/30 hover:to-blue-50/30 transition-all duration-300 ${
+                            className={`border-b border-slate-100 hover:bg-slate-50 transition-all duration-300 ${
                               item.role === 'admin' ? 'bg-blue-50/20' : 'bg-white'
                             }`}
                           >
-                            <td className="p-4 text-slate-700">{item.email}</td>
-                            <td className="p-4 text-slate-700">{item.role}</td>
-                            <td className="p-4 space-x-2">
+                            <td className="p-4 text-slate-700 whitespace-nowrap">{item.nama || 'Tidak Ada Nama'}</td> {/* Tampilkan nama */}
+                            <td className="p-4 text-slate-700 whitespace-nowrap">{item.email}</td>
+                            <td className="p-4 text-slate-700 whitespace-nowrap">{item.role}</td>
+                            <td className="p-4 whitespace-nowrap">
                               {item.role === 'user' ? (
                                 <button
                                   onClick={() => handleUbahRole(item.id, 'admin')}

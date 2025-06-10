@@ -15,7 +15,7 @@ export default function TambahAcara() {
     waktu: '',
     no_cp: '',
     deskripsi: '',
-    link_pendaftaran: '', // Tambah field ini
+    link_pendaftaran: '',
   });
   const [posterFile, setPosterFile] = useState(null);
   const [error, setError] = useState(null);
@@ -56,7 +56,6 @@ export default function TambahAcara() {
     
     let posterUrl = null;
     try {
-      // 1. Upload poster ke Supabase Storage jika ada file
       if (posterFile) {
         const fileExtension = posterFile.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
@@ -80,7 +79,7 @@ export default function TambahAcara() {
         posterUrl = publicUrlData.publicUrl;
       }
 
-      // 2. Insert data acara ke database
+ 
       const { error: insertError } = await supabase.from('acara_pembersihan').insert([{
         judul: formData.judul,
         lokasi: formData.lokasi,
@@ -89,9 +88,9 @@ export default function TambahAcara() {
         no_cp: formData.no_cp || null,
         deskripsi: formData.deskripsi || null,
         poster_url: posterUrl,
-        link_pendaftaran: formData.link_pendaftaran || null, // Tambah field ini
+        link_pendaftaran: formData.link_pendaftaran || null, 
         updated_at: new Date().toISOString(),
-        // status: 'pending', // Jika Anda ingin default status 'pending' untuk diverifikasi admin
+       
       }]);
 
       if (insertError) {

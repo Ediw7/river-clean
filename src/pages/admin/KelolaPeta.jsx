@@ -1,17 +1,15 @@
-// src/pages/admin/KelolaPeta.jsx
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'; // Import useMap
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { supabase } from '../../lib/supabase';
 import HeaderAdmin from '../../components/admin/HeaderAdmin';
 import SidebarAdmin from '../../components/admin/SidebarAdmin';
 import FooterAdmin from '../../components/admin/FooterAdmin';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import 'leaflet.heat'; // Import Leaflet.heat for heatmap functionality
+import 'leaflet.heat'; 
 import { Edit, Trash2, MapPin } from 'lucide-react';
 
-// Fix default icon issue with Webpack/Create React App (if not already done globally)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
@@ -19,7 +17,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-// Custom icon untuk marker berdasarkan status
 const getMarkerIcon = (status) => {
   const iconUrl = {
     bersih: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
@@ -36,41 +33,35 @@ const getMarkerIcon = (status) => {
   });
 };
 
-// Heatmap Layer Component
 function HeatmapLayer({ data }) {
-  const map = useMap(); // Get the current map instance
+  const map = useMap();
 
   useEffect(() => {
-    // Pastikan Leaflet.heat sudah dimuat
     if (!map || !L.heat) {
       console.warn('Leaflet.heat not loaded or map instance not available for heatmap.');
       return;
     }
 
-    // Ubah data menjadi format yang dibutuhkan oleh Leaflet.heat: [[lat, lng, intensity], ...]
-    const heatPoints = data.map(item => [item.latitude, item.longitude, item.heatmap_intensity || 0]); // Default 0 jika tidak ada intensity
+   
+    const heatPoints = data.map(item => [item.latitude, item.longitude, item.heatmap_intensity || 0]); 
 
-    // Hapus layer heatmap sebelumnya jika ada
     map.eachLayer((layer) => {
-      if (layer._heat) { // Properti _heat biasanya ada di layer heatmap
+      if (layer._heat) { 
         map.removeLayer(layer);
       }
     });
 
-    // Tambahkan layer heatmap baru
     const heat = L.heatLayer(heatPoints, {
-      radius: 25, // Ukuran radius hotspot
-      blur: 15,    // Tingkat keburaman
-      maxZoom: 17, // Zoom level maksimum di mana heatmap terlihat jelas
-      // Custom gradient warna (sesuai kebutuhan: hijau-kuning-merah)
+      radius: 25,
+      blur: 15,    
+      maxZoom: 17, 
       gradient: { 0.0: 'blue', 0.2: 'cyan', 0.4: 'green', 0.6: 'yellow', 0.8: 'orange', 1.0: 'red' }
     }).addTo(map);
 
-    // Cleanup function: hapus layer saat komponen unmount
     return () => {
       map.removeLayer(heat);
     };
-  }, [map, data]); // Re-run effect jika map atau data berubah
+  }, [map, data]); 
 
   return null;
 }
@@ -84,9 +75,8 @@ export default function KelolaPeta() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [editModal, setEditModal] = useState({ open: false, data: null });
 
-  // Menggunakan useCallback untuk fetch data
   const fetchData = useCallback(async () => {
-    setLoading(true); // Pastikan loading diatur ulang saat fetch data
+    setLoading(true); 
     try {
       let query = supabase.from('peta_status').select('*').order('updated_at', { ascending: false });
       if (filterStatus !== 'all') {
@@ -101,7 +91,7 @@ export default function KelolaPeta() {
     } finally {
       setLoading(false);
     }
-  }, [filterStatus]); // Re-fetch when filterStatus changes
+  }, [filterStatus]);
 
   useEffect(() => {
     const checkAuthAndFetch = async () => {
@@ -125,38 +115,36 @@ export default function KelolaPeta() {
           return;
         }
 
-        // Panggil fetchData setelah otentikasi berhasil
         await fetchData();
 
       } catch (err) {
         setError('Gagal memuat halaman: ' + err.message);
         console.error('Auth check error:', err);
       } finally {
-        setLoading(false); // Pastikan loading false bahkan jika auth gagal
+        setLoading(false); 
       }
     };
 
     checkAuthAndFetch();
-  }, [navigate, fetchData]); // fetchData sebagai dependency
+  }, [navigate, fetchData]);
 
   const handleEdit = async (id, updatedData) => {
-    const originalPetaData = [...petaData]; // Simpan data asli untuk rollback
+    const originalPetaData = [...petaData]; 
 
-    // Optimistic UI Update
     setPetaData(prevData =>
       prevData.map(item =>
         item.id === id ? { ...item, ...updatedData, updated_at: new Date().toISOString() } : item
       )
     );
-    setEditModal({ open: false, data: null }); // Tutup modal segera
+    setEditModal({ open: false, data: null }); 
 
     try {
-      // Supabase storage needs numbers, ensure proper type conversion
+   
       const payload = {
         lokasi: updatedData.lokasi,
         status: updatedData.status,
         jenis_limbah: updatedData.jenis_limbah || null,
-        heatmap_intensity: parseInt(updatedData.heatmap_intensity, 10) || 0, // Pastikan integer, default 0
+        heatmap_intensity: parseInt(updatedData.heatmap_intensity, 10) || 0, 
         latitude: parseFloat(updatedData.latitude),
         longitude: parseFloat(updatedData.longitude),
         updated_at: new Date().toISOString(),
@@ -176,16 +164,15 @@ export default function KelolaPeta() {
       }
     } catch (err) {
       setError('Gagal mengedit data: ' + err.message);
-      setPetaData(originalPetaData); // Rollback UI
-      setEditModal({ open: true, data: originalPetaData.find(item => item.id === id) }); // Buka kembali modal
+      setPetaData(originalPetaData);
+      setEditModal({ open: true, data: originalPetaData.find(item => item.id === id) }); 
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Yakin ingin menghapus data ini?')) {
-      const originalPetaData = [...petaData]; // Simpan data asli
+      const originalPetaData = [...petaData]; 
 
-      // Optimistic UI Update
       setPetaData(prevData => prevData.filter(item => item.id !== id));
 
       try {
@@ -199,7 +186,7 @@ export default function KelolaPeta() {
         }
       } catch (err) {
         setError('Gagal menghapus data: ' + err.message);
-        setPetaData(originalPetaData); // Rollback UI
+        setPetaData(originalPetaData); 
       }
     }
   };
@@ -223,11 +210,8 @@ export default function KelolaPeta() {
     );
   }
 
-  // Definisikan posisi default peta jika petaData kosong atau tidak ada koordinat
-  const defaultMapCenter = [-6.1745, 106.8227]; // Jakarta, Indonesia
+  const defaultMapCenter = [-6.1745, 106.8227]; 
   const defaultMapZoom = 10;
-
-  // Tentukan posisi tengah peta berdasarkan data pertama jika ada, atau default
   const mapCenter = petaData.length > 0 && petaData[0].latitude && petaData[0].longitude
     ? [petaData[0].latitude, petaData[0].longitude]
     : defaultMapCenter;
@@ -288,13 +272,13 @@ export default function KelolaPeta() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg overflow-hidden p-4"> {/* Added p-4 for padding around map */}
+              <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg overflow-hidden p-4"> 
                 <MapContainer
-                  center={mapCenter} // Menggunakan mapCenter yang dinamis
+                  center={mapCenter}
                   zoom={defaultMapZoom}
                   scrollWheelZoom={true}
                   style={{ height: '70vh', width: '100%' }}
-                  className="rounded-xl" // Slightly smaller rounded corners for map inside padded container
+                  className="rounded-xl" 
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -303,7 +287,7 @@ export default function KelolaPeta() {
                   {petaData.map((item) =>
                     item.latitude && item.longitude && (
                       <Marker key={item.id} position={[item.latitude, item.longitude]} icon={getMarkerIcon(item.status)}>
-                        <Popup className="rounded-xl"> {/* Ensure popup is styled correctly */}
+                        <Popup className="rounded-xl"> 
                           <div className="p-4">
                             <p className="font-medium text-slate-700"><strong>Lokasi:</strong> {item.lokasi}</p>
                             <p className="text-slate-600"><strong>Status:</strong> <span className={`font-semibold ${
@@ -335,12 +319,12 @@ export default function KelolaPeta() {
                       </Marker>
                     )
                   )}
-                  {/* Heatmap Layer */}
+             
                   {petaData.length > 0 && <HeatmapLayer data={petaData} />}
                 </MapContainer>
               </div>
             )}
-            {/* Table section for detailed list */}
+          
             <div className="mt-8 bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg overflow-hidden">
                 <h2 className="text-xl font-bold text-slate-800 p-4 border-b border-slate-200">Daftar Lokasi</h2>
                 {petaData.length === 0 ? (
@@ -470,7 +454,7 @@ export default function KelolaPeta() {
                 <label className="block text-sm font-medium text-slate-700 mb-2">Latitude</label>
                 <input
                   type="number"
-                  step="any" // Allow decimal numbers
+                  step="any" 
                   value={editModal.data.latitude}
                   onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, latitude: e.target.value } })}
                   className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
@@ -482,7 +466,7 @@ export default function KelolaPeta() {
                 <label className="block text-sm font-medium text-slate-700 mb-2">Longitude</label>
                 <input
                   type="number"
-                  step="any" // Allow decimal numbers
+                  step="any"
                   value={editModal.data.longitude}
                   onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, longitude: e.target.value } })}
                   className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"

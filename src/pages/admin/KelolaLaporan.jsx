@@ -105,7 +105,6 @@ export default function KelolaLaporan() {
     checkAuthAndFetch();
   }, [navigate, fetchLaporan]);
 
-  // fetchLaporanWithFilter tetap ada, tidak berubah
   const fetchLaporanWithFilter = async (statusFilter = null) => {
     try {
       let query = supabase
@@ -135,12 +134,9 @@ export default function KelolaLaporan() {
   };
 
   const handleStatusChange = async (id, newStatus) => {
-    // 1. Simpan state laporan sebelum perubahan untuk rollback jika terjadi error
     const originalLaporan = [...laporan];
     const itemIndex = laporan.findIndex((item) => item.id === id);
     const originalItem = laporan[itemIndex];
-
-    // 2. Optimistic UI Update: Langsung update state di frontend
     setLaporan((prevLaporan) =>
       prevLaporan.map((item) =>
         item.id === id ? { ...item, status: newStatus, updated_at: new Date().toISOString() } : item
@@ -158,7 +154,6 @@ export default function KelolaLaporan() {
         throw error;
       }
 
-      // Kirim pesan WhatsApp hanya jika status berubah dari 'menunggu'
       if (originalItem.whatsapp_number && newStatus !== 'menunggu') {
         const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nStatus laporan Anda (ID: ${id}) telah diperbarui menjadi: *${newStatus}*.`;
         const whatsappUrl = `https://wa.me/${originalItem.whatsapp_number.replace('+', '')}?text=${encodeURIComponent(message)}`;
@@ -166,16 +161,14 @@ export default function KelolaLaporan() {
       }
     } catch (err) {
       setError('Gagal mengubah status: ' + err.message);
-      // Rollback UI jika terjadi error
       setLaporan(originalLaporan);
     }
   };
 
   const handleDelete = async (id, fotoPath) => {
     if (window.confirm('Yakin ingin menghapus laporan ini?')) {
-      const originalLaporan = [...laporan]; // Simpan state asli
-      
-      // Optimistic UI Update: Hapus dari daftar di frontend
+      const originalLaporan = [...laporan];
+ 
       setLaporan((prevLaporan) => prevLaporan.filter((item) => item.id !== id));
 
       try {
@@ -195,7 +188,6 @@ export default function KelolaLaporan() {
         }
       } catch (err) {
         setError('Gagal menghapus laporan: ' + err.message);
-        // Rollback UI jika error
         setLaporan(originalLaporan);
       }
     }
@@ -211,7 +203,7 @@ export default function KelolaLaporan() {
         item.id === id ? { ...item, ...updatedData, updated_at: new Date().toISOString() } : item
       )
     );
-    setEditModal({ open: false, data: null }); // Tutup modal segera
+    setEditModal({ open: false, data: null }); 
 
     try {
       const { error } = await supabase
@@ -224,8 +216,8 @@ export default function KelolaLaporan() {
       }
     } catch (err) {
       setError('Gagal mengedit laporan: ' + err.message);
-      setLaporan(originalLaporan); // Rollback UI
-      setEditModal({ open: true, data: originalItem }); // Buka kembali modal jika perlu
+      setLaporan(originalLaporan); 
+      setEditModal({ open: true, data: originalItem }); 
     }
   };
 
@@ -239,7 +231,7 @@ export default function KelolaLaporan() {
         item.id === id ? { ...item, catatan_admin: note, updated_at: new Date().toISOString() } : item
       )
     );
-    setNoteModal({ open: false, data: null, note: '' }); // Tutup modal segera
+    setNoteModal({ open: false, data: null, note: '' });
 
     try {
       const { error } = await supabase
@@ -258,8 +250,8 @@ export default function KelolaLaporan() {
       }
     } catch (err) {
       setError('Gagal menambahkan catatan: ' + err.message);
-      setLaporan(originalLaporan); // Rollback UI
-      setNoteModal({ open: true, data: originalItem, note: originalItem.catatan_admin || '' }); // Buka kembali modal jika perlu
+      setLaporan(originalLaporan);
+      setNoteModal({ open: true, data: originalItem, note: originalItem.catatan_admin || '' }); 
     }
   };
 
@@ -273,7 +265,7 @@ export default function KelolaLaporan() {
         item.id === id ? { ...item, tindak_lanjut: followUp, updated_at: new Date().toISOString() } : item
       )
     );
-    setFollowUpModal({ open: false, data: null, followUp: '' }); // Tutup modal segera
+    setFollowUpModal({ open: false, data: null, followUp: '' }); 
 
     try {
       const { error } = await supabase
@@ -292,8 +284,8 @@ export default function KelolaLaporan() {
       }
     } catch (err) {
       setError('Gagal menambahkan tindak lanjut: ' + err.message);
-      setLaporan(originalLaporan); // Rollback UI
-      setFollowUpModal({ open: true, data: originalItem, followUp: originalItem.tindak_lanjut || '' }); // Buka kembali modal jika perlu
+      setLaporan(originalLaporan);
+      setFollowUpModal({ open: true, data: originalItem, followUp: originalItem.tindak_lanjut || '' }); 
     }
   };
 
@@ -309,7 +301,7 @@ export default function KelolaLaporan() {
     );
 
     try {
-      const phoneNumber = '+6285640170089'; // Ganti dengan nomor WhatsApp tim lapangan Anda
+      const phoneNumber = '+6285640170089';
       const displayFotoPath = item.foto_path && item.foto_path.startsWith('public/')
         ? item.foto_path.substring('public/'.length)
         : item.foto_path;
@@ -331,7 +323,7 @@ export default function KelolaLaporan() {
       }
     } catch (err) {
       setError('Gagal mengirim ke tim lapangan: ' + err.message);
-      setLaporan(originalLaporan); // Rollback UI
+      setLaporan(originalLaporan); 
     }
   };
 
@@ -399,7 +391,7 @@ export default function KelolaLaporan() {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-slate-200"> {/* Added min-w-full */}
+                    <table className="min-w-full divide-y divide-slate-200"> 
                       <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
                         <tr>
                           <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Nama Pelapor</th>
@@ -438,7 +430,7 @@ export default function KelolaLaporan() {
                                 </div>
                               </td>
                               <td className="p-4 text-slate-700 whitespace-nowrap">
-                                <div className="flex items-center space-x-2"> {/* Pastikan ini ada dan benar */}
+                                <div className="flex items-center space-x-2"> 
                                   <MapPin className="w-4 h-4 text-slate-500" />
                                   <span>{item.lokasi}</span>
                                 </div>
@@ -575,7 +567,6 @@ export default function KelolaLaporan() {
         </main>
       </div>
 
-      {/* Modals (No changes needed here for functionality, only styling) */}
       {editModal.open && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">

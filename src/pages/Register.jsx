@@ -10,35 +10,35 @@ export default function Register() {
   const [nama, setNama] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [nameValidationError, setNameValidationError] = useState(null);
-  const [formError, setFormError] = useState(null); // PERBAIKAN DI SINI: Deklarasi state formError
+  const [formError, setFormError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { user } } = await supabase.auth.getUser(); // Destructure with default empty object
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) navigate('/user/dashboard');
     };
     checkSession();
   }, [navigate]);
 
   const validateInputs = () => {
-    setNameValidationError(null); // Reset validasi nama spesifik
-    setFormError(null); // Reset validasi form umum
+    setNameValidationError(null);
+    setFormError(null);
 
     if (!nama.trim()) {
       setNameValidationError('Nama lengkap wajib diisi.');
       return false;
     }
-    if (nama.trim().length < 4) {
+    if (nama.trim().length < 4) { // Nama harus lebih dari 3 karakter
       setNameValidationError('Nama harus lebih dari 3 karakter.');
       return false;
     }
     if (!email.toLowerCase().endsWith('@gmail.com')) {
-      setFormError('Email harus berakhiran @gmail.com'); // Set error umum
+      setFormError('Email harus berakhiran @gmail.com');
       return false;
     }
     if (password.length < 6) {
-      setFormError('Kata sandi harus minimal 6 karakter.'); // Set error umum
+      setFormError('Kata sandi harus minimal 6 karakter.');
       return false;
     }
     return true;
@@ -54,16 +54,15 @@ export default function Register() {
     }
   };
 
-
   const handleRegister = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setFormError(null); // Reset error di awal submit
+    setFormError(null);
 
     const isValid = validateInputs();
     if (!isValid) {
       setIsLoading(false);
-      return; // Hentikan proses jika validasi gagal (pesan sudah di setFormError atau setNameValidationError)
+      return;
     }
 
     try {
@@ -76,17 +75,16 @@ export default function Register() {
 
       if (authError) {
         console.error('Supabase Auth signUp Error:', authError.message);
-        setFormError(authError.message || 'Pendaftaran gagal. Coba lagi.'); // Set error
+        setFormError(authError.message || 'Pendaftaran gagal. Coba lagi.');
         setIsLoading(false);
-        // navigate('/login', { state: { message: authError.message || 'Pendaftaran gagal. Coba lagi.' } }); // Redirect ini bisa kita simpan jika ingin menampilkan pesan di halaman login
         return;
       }
 
       if (!authData.user) {
         console.log('User needs email verification. Auth data:', authData);
-        setFormError('Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi dan login.'); // Set error
+        setFormError('Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi dan login.');
         setIsLoading(false);
-        // navigate('/login', { state: { message: 'Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi dan login.' } }); // Redirect
+        navigate('/login', { state: { message: 'Pendaftaran berhasil! Cek email Anda untuk verifikasi dan login.' } });
         return;
       }
 
@@ -98,7 +96,6 @@ export default function Register() {
         nama: nama.trim(),
         whatsapp_number: whatsappNumber?.trim() || null,
         role: 'user',
-        points: 0,
         created_at: new Date().toISOString()
       };
 
@@ -110,29 +107,24 @@ export default function Register() {
 
       if (upsertError) {
         console.error('Supabase Upsert Error into public.users:', upsertError.message);
-        setFormError('Pendaftaran berhasil, tetapi gagal menyimpan detail pengguna: ' + upsertError.message); // Set error
+        setFormError('Pendaftaran berhasil, tetapi gagal menyimpan detail pengguna: ' + upsertError.message);
         setIsLoading(false);
-        // navigate('/login', { state: { message: 'Pendaftaran berhasil, tetapi gagal menyimpan detail pengguna: ' + upsertError.message } });
         return;
       }
 
       console.log('User data successfully saved to public.users.');
-      setFormError('Pendaftaran berhasil! Silakan login.'); // Pesan sukses akhir
-      // Redirect ke login setelah sukses
+      setFormError('Pendaftaran berhasil! Silakan login.');
       navigate('/login', { state: { message: 'Pendaftaran berhasil! Silakan login.' } });
 
     } catch (err) {
       console.error('Unexpected Registration Error:', err);
-      setFormError('Terjadi kesalahan tidak terduga: ' + (err.message || '')); // Set error
-      setIsLoading(false);
-      // navigate('/login', { state: { message: 'Terjadi kesalahan tidak terduga saat pendaftaran.' } });
+      setFormError('Terjadi kesalahan tidak terduga: ' + (err.message || ''));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isRegisterButtonDisabled = isLoading || nama.trim().length < 3 || !email.toLowerCase().endsWith('@gmail.com') || password.length < 6;
-
+  const isRegisterButtonDisabled = isLoading || nama.trim().length < 4 || !email.toLowerCase().endsWith('@gmail.com') || password.length < 6;
 
   return (
     <div className="min-h-screen bg-slate-950 text-white relative overflow-hidden">
@@ -142,14 +134,14 @@ export default function Register() {
         <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
       
-      <div className="absolute top-6 left-6 z-20">
-        <Link to="/" className="inline-flex items-center space-x-2 px-4 py-2 bg-slate-800/50 backdrop-blur-md border border-slate-700 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-700/50 hover:border-cyan-500/50">
+      <div className="absolute top-4 left-4 md:left-6 z-20">
+        <Link to="/" className="inline-flex items-center space-x-2 px-3 py-2 sm:px-4 sm:py-2 bg-slate-800/50 backdrop-blur-md border border-slate-700 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-700/50 hover:border-cyan-500/50">
           <ArrowLeft className="w-4 h-4" />
-          <span>Kembali</span>
+          <span className="hidden sm:inline">Kembali</span>
         </Link>
       </div>
 
-      <div className="min-h-screen flex items-center justify-center px-6 relative z-10">
+      <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 relative z-10">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl mb-6">
@@ -163,7 +155,7 @@ export default function Register() {
             <p className="text-slate-400">Bergabung dengan komunitas River Hero</p>
           </div>
 
-          <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700 rounded-3xl p-8 hover:border-cyan-500/30 transition-all duration-300">
+          <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700 rounded-3xl p-6 sm:p-8 hover:border-cyan-500/30 transition-all duration-300">
             <form onSubmit={handleRegister} className="space-y-6">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-slate-300">Nama Lengkap *</label>
@@ -238,7 +230,7 @@ export default function Register() {
                 </div>
               </div>
 
-              {formError && ( // Tampilkan formError jika ada
+              {formError && (
                 <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 text-red-400" />
                   <p className="text-red-400 text-sm">{formError}</p>
@@ -267,7 +259,7 @@ export default function Register() {
               </button>
             </form>
 
-            <div className="mt-8 text-center">
+            <div className="mt-6 text-center">
               <p className="text-slate-400">
                 Sudah punya akun?{' '}
                 <Link to="/login" className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors duration-300 hover:underline">
@@ -277,7 +269,7 @@ export default function Register() {
             </div>
           </div>
 
-          <div className="mt-8 text-center">
+          <div className="mt-6 text-center">
             <p className="text-sm text-slate-500">
               Dengan mendaftar, Anda setuju dengan{' '}
               <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors duration-300">

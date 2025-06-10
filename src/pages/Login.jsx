@@ -66,13 +66,13 @@ export default function Login() {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
-      <div className="absolute top-6 left-6 z-20">
-        <Link to="/" className="inline-flex items-center space-x-2 px-4 py-2 bg-slate-800/50 backdrop-blur-md border border-slate-700 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-700/50 hover:border-cyan-500/50">
+      <div className="absolute top-4 left-4 md:left-6 z-20">
+        <Link to="/" className="inline-flex items-center space-x-2 px-3 py-2 sm:px-4 sm:py-2 bg-slate-800/50 backdrop-blur-md border border-slate-700 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-700/50 hover:border-cyan-500/50">
           <ArrowLeft className="w-4 h-4" />
-          <span>Kembali</span>
+          <span className="hidden sm:inline">Kembali</span>
         </Link>
       </div>
-      <div className="min-h-screen flex items-center justify-center px-6 relative z-10">
+      <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 relative z-10">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl mb-6">
@@ -85,7 +85,7 @@ export default function Login() {
             </h1>
             <p className="text-slate-400">Masuk ke akun River Hero Anda</p>
           </div>
-          <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700 rounded-3xl p-8 hover:border-cyan-500/30 transition-all duration-300">
+          <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700 rounded-3xl p-6 sm:p-8 hover:border-cyan-500/30 transition-all duration-300">
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-slate-300">Alamat Email</label>
@@ -135,7 +135,7 @@ export default function Login() {
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
             </form>
-            <div className="mt-8 text-center">
+            <div className="mt-6 text-center">
               <p className="text-slate-400">
                 Belum punya akun?{' '}
                 <Link to="/register" className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors duration-300 hover:underline">
@@ -144,7 +144,7 @@ export default function Login() {
               </p>
             </div>
           </div>
-          <div className="mt-8 text-center">
+          <div className="mt-6 text-center">
             <p className="text-sm text-slate-500">
               Dengan masuk, Anda setuju dengan{' '}
               <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors duration-300">
