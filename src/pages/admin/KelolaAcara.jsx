@@ -5,7 +5,7 @@ import HeaderAdmin from '../../components/admin/HeaderAdmin';
 import SidebarAdmin from '../../components/admin/SidebarAdmin';
 import FooterAdmin from '../../components/admin/FooterAdmin';
 import {
-  FileText, // Ini seharusnya tidak ada di sini, tapi saya biarkan untuk konteks.
+  FileText, 
   MapPin,
   Trash2,
   Edit,
@@ -30,8 +30,8 @@ export default function KelolaAcara() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editModal, setEditModal] = useState({ open: false, data: null, newPosterFile: null });
-  const [noteModal, setNoteModal] = useState({ open: false, data: null, note: '' }); // Tidak digunakan di KelolaAcara, bisa dihapus jika tidak ada konteks
-  const [followUpModal, setFollowUpModal] = useState({ open: false, data: null, followUp: '' }); // Tidak digunakan di KelolaAcara, bisa dihapus jika tidak ada konteks
+  const [noteModal, setNoteModal] = useState({ open: false, data: null, note: '' }); 
+  const [followUpModal, setFollowUpModal] = useState({ open: false, data: null, followUp: '' }); 
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
 
@@ -80,7 +80,7 @@ export default function KelolaAcara() {
         await fetchAcara();
 
       } catch (err) {
-        setError('Gagal memverifikasi role admin atau memuat data: ' + err.message); // PERBAIKAN DI SINI
+        setError('Gagal memverifikasi role admin atau memuat data: ' + err.message); 
         console.error('Auth check error:', err);
       }
     };
@@ -268,7 +268,7 @@ export default function KelolaAcara() {
         <main className="ml-56 pt-6 pb-16 px-8 w-full overflow-y-auto h-full bg-gradient-to-br from-slate-50/50 via-blue-50/30 to-cyan-50/50">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-              <div className="flex items-center space-x-3 mb-4">
+              <div className="flex items-center space-x-3 mt-4 mb-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-white" />
                 </div>

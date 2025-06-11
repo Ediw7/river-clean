@@ -139,7 +139,7 @@ export default function TambahAcara() {
         <main className="ml-56 pt-4 pb-16 px-8 w-full overflow-y-auto h-full bg-gradient-to-br from-slate-50/50 via-blue-50/30 to-cyan-50/50">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center mt-4 space-x-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
                   <Plus className="w-6 h-6 text-white" />
                 </div>

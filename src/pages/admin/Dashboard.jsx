@@ -167,7 +167,7 @@ export default function Dashboard() {
       icon: Heart,
       color: 'from-pink-500 to-rose-500',
       bgColor: 'bg-gradient-to-br from-pink-50 to-rose-50',
-      link: '/admin/kelolacompanion'
+      link: '/admin/companion'
     },
     {
       title: 'Pesan Digital',
@@ -199,7 +199,7 @@ export default function Dashboard() {
           <div className="max-w-6xl mx-auto">
             {/* Header Section */}
             <div className="mb-8">
-              <div className="flex items-center space-x-3 mb-4">
+              <div className="flex items-center mt-4 space-x-3 mb-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
@@ -276,11 +276,10 @@ export default function Dashboard() {
                               <FileText className="w-4 h-4 text-white" />
                             </div>
                             <div>
-                              {/* PERBAIKAN DI SINI: Akses nama/email langsung dari activity */}
                               <p className="text-slate-700 font-medium">Laporan dari {activity.nama || activity.email?.split('@')[0] || 'Anonim'}:</p>
-                              <p className="text-sm text-slate-500">{activity.deskripsi || '-'}</p> {/* Tambah null check */}
+                              <p className="text-sm text-slate-500">{activity.deskripsi || '-'}</p> 
                               <p className="text-xs text-slate-400">
-                                Tanggal: {new Date(activity.created_at || '').toLocaleDateString()} {/* Tambah null check */}
+                                Tanggal: {new Date(activity.created_at || '').toLocaleDateString()}
                               </p>
                             </div>
                           </div>

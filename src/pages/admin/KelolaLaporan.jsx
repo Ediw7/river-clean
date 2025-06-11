@@ -14,21 +14,21 @@ import {
   Image,
   AlertTriangle,
   Send,
-  Search, // Import Search
-  Filter, // Import Filter
+  Search,
+  Filter,
 } from 'lucide-react';
 
 export default function KelolaLaporan() {
   const navigate = useNavigate();
   const [laporan, setLaporan] = useState([]);
-  const [displayedLaporan, setDisplayedLaporan] = useState([]); // State untuk data yang ditampilkan setelah filter/sort
+  const [displayedLaporan, setDisplayedLaporan] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editModal, setEditModal] = useState({ open: false, data: null });
   const [noteModal, setNoteModal] = useState({ open: false, data: null, note: '' });
   const [followUpModal, setFollowUpModal] = useState({ open: false, data: null, followUp: '' });
-  const [searchTerm, setSearchTerm] = useState(''); // State untuk search
-  const [sortBy, setSortBy] = useState('created_at'); // State untuk sort
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('created_at');
 
   const fetchLaporan = useCallback(async () => {
     try {
@@ -61,7 +61,7 @@ export default function KelolaLaporan() {
 
       console.log('Data laporan berhasil dimuat:', data);
       setLaporan(data || []);
-      setDisplayedLaporan(data || []); // Inisialisasi data yang ditampilkan
+      setDisplayedLaporan(data || []);
     } catch (err) {
       console.error('Error detail fetchLaporan:', err);
       setError('Gagal memuat laporan: ' + (err.message || 'Unknown error'));
@@ -86,14 +86,7 @@ export default function KelolaLaporan() {
           .eq('email', user.email)
           .single();
 
-        if (userError) {
-          console.error('Error verifikasi user role:', userError);
-          setError('Gagal memverifikasi role admin: ' + userError.message);
-          navigate('/login');
-          return;
-        }
-
-        if (!userData || userData.role !== 'admin') {
+        if (userError || !userData || userData.role !== 'admin') {
           setError('Akses ditolak. Hanya admin yang dapat mengakses halaman ini.');
           navigate('/login');
           return;
@@ -111,17 +104,17 @@ export default function KelolaLaporan() {
     checkAuthAndFetch();
   }, [navigate, fetchLaporan]);
 
-  // Logika filter dan sort
   useEffect(() => {
     let filtered = laporan;
 
     if (searchTerm) {
+      const lowerCaseSearchTerm = searchTerm.toLowerCase();
       filtered = filtered.filter((item) =>
-        item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.lokasi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.deskripsi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.jenis_sampah.toLowerCase().includes(searchTerm.toLowerCase())
+        (item.nama || '').toLowerCase().includes(lowerCaseSearchTerm) ||
+        (item.email || '').toLowerCase().includes(lowerCaseSearchTerm) ||
+        (item.lokasi || '').toLowerCase().includes(lowerCaseSearchTerm) ||
+        (item.deskripsi || '').toLowerCase().includes(lowerCaseSearchTerm) ||
+        (item.jenis_sampah || '').toLowerCase().includes(lowerCaseSearchTerm)
       );
     }
 
@@ -158,8 +151,8 @@ export default function KelolaLaporan() {
       }
 
       if (originalItem.whatsapp_number && newStatus !== 'menunggu') {
-        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nStatus laporan Anda (ID: <span class="math-inline">\{id\}\) telah diperbarui menjadi\: \*</span>{newStatus}*.`;
-        const whatsappUrl = `https://wa.me/<span class="math-inline">\{originalItem\.whatsapp\_number\.replace\('\+', ''\)\}?text\=</span>{encodeURIComponent(message)}`;
+        const message = "Halo " + (originalItem.nama || 'Pelapor') + ",\n\nStatus laporan Anda (ID: " + id + ") telah diperbarui menjadi: *" + newStatus + "*.";
+        const whatsappUrl = "https://wa.me/" + originalItem.whatsapp_number.replace('+', '') + "?text=" + encodeURIComponent(message);
         window.open(whatsappUrl, '_blank');
       }
     } catch (err) {
@@ -246,8 +239,8 @@ export default function KelolaLaporan() {
       }
 
       if (originalItem.whatsapp_number) {
-        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nCatatan admin untuk laporan Anda (ID: <span class="math-inline">\{id\}\)\: \*</span>{note}*.\nStatus laporan Anda saat ini: *${originalItem.status}*.`;
-        const whatsappUrl = `https://wa.me/<span class="math-inline">\{originalItem\.whatsapp\_number\.replace\('\+', ''\)\}?text\=</span>{encodeURIComponent(message)}`;
+        const message = "Halo " + (originalItem.nama || 'Pelapor') + ",\n\nCatatan admin untuk laporan Anda (ID: " + id + "): *" + note + "*.\nStatus laporan Anda saat ini: *" + originalItem.status + "*.";
+        const whatsappUrl = "https://wa.me/" + originalItem.whatsapp_number.replace('+', '') + "?text=" + encodeURIComponent(message);
         window.open(whatsappUrl, '_blank');
       }
     } catch (err) {
@@ -280,8 +273,8 @@ export default function KelolaLaporan() {
       }
 
       if (originalItem.whatsapp_number) {
-        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nTindak lanjut terbaru untuk laporan Anda (ID: <span class="math-inline">\{id\}\)\: \*</span>{followUp}*.\nStatus laporan Anda saat ini: *${originalItem.status}*.`;
-        const whatsappUrl = `https://wa.me/<span class="math-inline">\{originalItem\.whatsapp\_number\.replace\('\+', ''\)\}?text\=</span>{encodeURIComponent(message)}`;
+        const message = "Halo " + (originalItem.nama || 'Pelapor') + ",\n\nTindak lanjut terbaru untuk laporan Anda (ID: " + id + "): *" + followUp + "*.\nStatus laporan Anda saat ini: *" + originalItem.status + "*.";
+        const whatsappUrl = "https://wa.me/" + originalItem.whatsapp_number.replace('+', '') + "?text=" + encodeURIComponent(message);
         window.open(whatsappUrl, '_blank');
       }
     } catch (err) {
@@ -303,16 +296,16 @@ export default function KelolaLaporan() {
     );
 
     try {
-      const phoneNumber = '+6285640170089';
+      const phoneNumber = '+6285641837684';
       const displayFotoPath = item.foto_path && item.foto_path.startsWith('public/')
-        ? item.foto_path.substring('public/'.length)
-        : item.foto_path;
-      const imageUrl = item.foto_path
-        ? `https://wwuorklatnmvtkhsjkzt.supabase.co/storage/v1/object/public/laporan-foto/public/${displayFotoPath}`
-        : 'Tidak ada foto';
+      ? item.foto_path.substring('public/'.length)
+      : item.foto_path;
+    const imageUrl = item.foto_path
+      ? `https://wwuorklatnmvtkhsjkzt.supabase.co/storage/v1/object/public/laporan-foto/public/${displayFotoPath}`
+      : 'Tidak ada foto';
 
-      const message = `*Laporan Pencemaran Baru untuk Tindak Lanjut*\n\n*ID Laporan:* ${id}\n*Lokasi:* ${item.lokasi}\n*Deskripsi:* ${item.deskripsi}\n*Jenis Sampah:* ${item.jenis_sampah}\n*Foto:* ${imageUrl}\n\n*Mohon segera ditindaklanjuti oleh tim lapangan.*`;
-      const whatsappUrl = `https://wa.me/<span class="math-inline">\{phoneNumber\}?text\=</span>{encodeURIComponent(message)}`;
+      const message = "*Laporan Pencemaran Baru untuk Tindak Lanjut*\n\n*ID Laporan:* " + id + "\n*Lokasi:* " + item.lokasi + "\n*Deskripsi:* " + item.deskripsi + "\n*Jenis Sampah:* " + item.jenis_sampah + "\n*Foto:* " + imageUrl + "\n\n*Mohon segera ditindaklanjuti oleh tim lapangan.*";
+      const whatsappUrl = "https://wa.me/" + phoneNumber + "?text=" + encodeURIComponent(message);
       window.open(whatsappUrl, '_blank');
 
       const { error } = await supabase
@@ -387,7 +380,18 @@ export default function KelolaLaporan() {
                   className="w-full pl-10 pr-4 py-2 bg-white/80 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                 />
               </div>
-            
+              <div className="flex items-center gap-2">
+                <Filter className="text-slate-500" size={20} />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-white/80 border border-slate-200 rounded-lg py-2 px-4 text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                >
+                  <option value="created_at">Terbaru</option>
+                  <option value="nama">Nama Pelapor</option>
+                  <option value="lokasi">Lokasi</option>
+                </select>
+              </div>
             </div>
 
             {loading ? (
@@ -458,7 +462,7 @@ export default function KelolaLaporan() {
                                 </span>
                               </td>
                               <td className="p-4">
-                                {item.foto_path ? (
+                              {item.foto_path ? (
                                   <a
                                     href={`https://wwuorklatnmvtkhsjkzt.supabase.co/storage/v1/object/public/laporan-foto/public/${displayFotoPath}`}
                                     target="_blank"
@@ -521,21 +525,21 @@ export default function KelolaLaporan() {
                                 <div className="flex flex-col gap-2">
                                   <button
                                     onClick={() => setEditModal({ open: true, data: item })}
-                                    className="w-full px-3 py-1.5 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
+                                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
                                   >
                                     <Edit className="w-4 h-4" />
                                     <span>Edit</span>
                                   </button>
                                   <button
                                     onClick={() => handleDelete(item.id, item.foto_path)}
-                                    className="w-full px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
+                                    className="px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                     <span>Hapus</span>
                                   </button>
                                   <button
                                     onClick={() => setNoteModal({ open: true, data: item, note: item.catatan_admin || '' })}
-                                    className="w-full px-3 py-1.5 bg-slate-600 hover:bg-slate-700 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
+                                    className="px-3 py-1.5 bg-slate-600 hover:bg-slate-700 rounded-lg text-white text-sm font-medium transition-colors duration-200 flex items-center space-x-1 justify-center"
                                   >
                                     <StickyNote className="w-4 h-4" />
                                     <span>Catatan</span>
@@ -584,23 +588,21 @@ export default function KelolaLaporan() {
 
       {editModal.open && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
-                <Edit className="w-5 h-5 text-white" />
+          <div className="bg-white/70 backdrop-blur-sm p-6 rounded-2xl shadow-lg w-full max-w-4xl border border-white/50"> {/* max-w-3xl */}
+            <div className="flex items-center space-x-3 mb-4"> {/* mb-4 */}
+              <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center"> {/* w-8 h-8 */}
+                <Edit className="w-4 h-4 text-white" /> {/* w-4 h-4 */}
               </div>
               <h2 className="text-xl font-semibold text-slate-800">Edit Laporan</h2>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Deskripsi</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Deskripsi</label> {/* mb-1 */}
                 <input
                   type="text"
                   value={editModal.data.deskripsi}
-                  onChange={(e) =>
-                    setEditModal({ ...editModal, data: { ...editModal.data, deskripsi: e.target.value } })
-                  }
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
+                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, deskripsi: e.target.value } })}
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 text-sm" /* p-2 text-sm */
                   placeholder="Deskripsi"
                 />
               </div>
@@ -609,10 +611,8 @@ export default function KelolaLaporan() {
                 <input
                   type="text"
                   value={editModal.data.lokasi}
-                  onChange={(e) =>
-                    setEditModal({ ...editModal, data: { ...editModal.data, lokasi: e.target.value } })
-                  }
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
+                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, lokasi: e.target.value } })}
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 text-sm"
                   placeholder="Lokasi"
                 />
               </div>
@@ -621,10 +621,8 @@ export default function KelolaLaporan() {
                 <input
                   type="text"
                   value={editModal.data.jenis_sampah}
-                  onChange={(e) =>
-                    setEditModal({ ...editModal, data: { ...editModal.data, jenis_sampah: e.target.value } })
-                  }
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
+                  onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, jenis_sampah: e.target.value } })}
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 text-sm"
                   placeholder="Jenis Sampah"
                 />
               </div>
@@ -653,77 +651,77 @@ export default function KelolaLaporan() {
         </div>
       )}
 
-      {noteModal.open && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
-                <StickyNote className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="text-xl font-semibold text-slate-800">Tambah Catatan Admin</h2>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Catatan</label>
-              <textarea
-                value={noteModal.note}
-                onChange={(e) => setNoteModal({ ...noteModal, note: e.target.value })}
-                className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 min-h-[120px] resize-none"
-                placeholder="Masukkan catatan admin..."
-              />
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setNoteModal({ open: false, data: null, note: '' })}
-                className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-300"
-              >
-                Batal
-              </button>
-              <button
-                onClick={() => handleAddNote(noteModal.data.id, noteModal.note)}
-                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
-              >
-                Simpan
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {noteModal.open && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+                <StickyNote className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-xl font-semibold text-slate-800">Tambah Catatan Admin</h2>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Catatan</label>
+              <textarea
+                value={noteModal.note}
+                onChange={(e) => setNoteModal({ ...noteModal, note: e.target.value })}
+                className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 min-h-[120px] resize-none"
+                placeholder="Masukkan catatan admin..."
+              />
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setNoteModal({ open: false, data: null, note: '' })}
+                className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-300"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => handleAddNote(noteModal.data.id, noteModal.note)}
+                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {followUpModal.open && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
-                <StickyNote className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="text-xl font-semibold text-slate-800">Tambah Tindak Lanjut</h2>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Tindak Lanjut</label>
-              <textarea
-                value={followUpModal.followUp}
-                onChange={(e) => setFollowUpModal({ ...followUpModal, followUp: e.target.value })}
-                className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 min-h-[120px] resize-none"
-                placeholder="Masukkan status tindak lanjut..."
-              />
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setFollowUpModal({ open: false, data: null, followUp: '' })}
-                className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-300"
-              >
-                Batal
-              </button>
-              <button
-                onClick={() => handleAddFollowUp(followUpModal.data.id, followUpModal.followUp)}
-                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
-              >
-                Simpan
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+      {followUpModal.open && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
+                <StickyNote className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-xl font-semibold text-slate-800">Tambah Tindak Lanjut</h2>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Tindak Lanjut</label>
+              <textarea
+                value={followUpModal.followUp}
+                onChange={(e) => setFollowUpModal({ ...followUpModal, followUp: e.target.value })}
+                className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 min-h-[120px] resize-none"
+                placeholder="Masukkan status tindak lanjut..."
+              />
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setFollowUpModal({ open: false, data: null, followUp: '' })}
+                className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-300"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => handleAddFollowUp(followUpModal.data.id, followUpModal.followUp)}
+                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

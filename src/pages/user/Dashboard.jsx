@@ -280,7 +280,7 @@ export default function UserDashboard() {
                       <Heart className="w-7 h-7 mr-3" />
                       River Companion Anda
                     </h2>
-                    <button onClick={() => navigate('/companion')} className="text-cyan-300 hover:text-cyan-200 text-sm font-medium transition">Lihat Companion</button>
+                    <button onClick={() => navigate('/user/companion')} className="text-cyan-300 hover:text-cyan-200 text-sm font-medium transition">Lihat Companion</button>
                   </div>
                   {userStats.companionLevel > 0 ? (
                     <div className="flex items-center gap-4">
@@ -300,10 +300,10 @@ export default function UserDashboard() {
                         <div className="w-full bg-gray-700/50 rounded-full h-1 mt-2">
                           <div
                             className="h-1 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
-                            style={{ width: `${(userStats.companionExp / 50) * 100}%` }}
+                            style={{ width: `${(userStats.companionExp / 500) * 100}%` }}
                           />
                         </div>
-                        <p className="text-xs text-gray-400">EXP: {userStats.companionExp}/50</p>
+                        <p className="text-xs text-gray-400">EXP: {userStats.companionExp}/500</p>
                       </div>
                     </div>
                   ) : (
@@ -321,7 +321,7 @@ export default function UserDashboard() {
                       <FileText className="w-7 h-7 mr-3" />
                       Laporan Terbaru Anda
                     </h2>
-                    <button onClick={() => navigate('/laporan')} className="text-cyan-300 hover:text-cyan-200 text-sm font-medium transition">Lihat Semua</button>
+                    <button onClick={() => navigate('/user/laporan')} className="text-cyan-300 hover:text-cyan-200 text-sm font-medium transition">Lihat Semua</button>
                   </div>
                   <div className="space-y-4">
                     {recentReports.length === 0 ? (
@@ -359,7 +359,7 @@ export default function UserDashboard() {
                       <Calendar className="w-7 h-7 mr-3" />
                       Event Mendatang
                     </h2>
-                    <button onClick={() => navigate('/acara')} className="text-cyan-300 hover:text-cyan-200 text-sm font-medium transition">Lihat Semua</button>
+                    <button onClick={() => navigate('/user/acara')} className="text-cyan-300 hover:text-cyan-200 text-sm font-medium transition">Lihat Semua</button>
                   </div>
                   <div className="space-y-4">
                     {upcomingEvents.length === 0 ? (
@@ -387,7 +387,7 @@ export default function UserDashboard() {
                       <MessageCircle className="w-6 h-6 mr-2" />
                       Forum Diskusi Terbaru
                     </h2>
-                    <button onClick={() => navigate('/pesandigital')} className="text-cyan-300 hover:text-cyan-200 text-sm font-medium transition">Lihat Forum</button>
+                    <button onClick={() => navigate('/user/pesandigital')} className="text-cyan-300 hover:text-cyan-200 text-sm font-medium transition">Lihat Forum</button>
                   </div>
                   <div className="space-y-3">
                     {recentForumTopics.length === 0 ? (

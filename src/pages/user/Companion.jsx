@@ -98,7 +98,7 @@ export default function Companion() {
         user_id: currentUser.id,
         nama: adopsiModal.nama.trim(),
         jenis: adopsiModal.jenis,
-        kesehatan: 100,
+        kesehatan: 0,
         level: 1,
         exp: 0,
         // emoticon dan warna dihapus
@@ -125,7 +125,8 @@ export default function Companion() {
   };
 
   const handlePerawatan = async () => {
-    const EXP_TO_NEXT_LEVEL_DISPLAY = 50;
+    const EXP_TO_NEXT_LEVEL_DISPLAY = 500; 
+    const EXP_FROM_CARE = 10; 
 
     if (!companion || isFeeding || companion.kesehatan >= 100) return;
     setIsFeeding(true);
@@ -134,9 +135,10 @@ export default function Companion() {
     const originalCompanion = { ...companion };
 
     const newKesehatanOptimistic = Math.min(companion.kesehatan + 20, 100);
-    const newExpOptimistic = companion.exp + 10;
+    const newExpOptimistic = companion.exp + EXP_FROM_CARE; 
     let newLevelOptimistic = companion.level;
     let newExpRemainderOptimistic = newExpOptimistic;
+
 
     while (newExpRemainderOptimistic >= EXP_TO_NEXT_LEVEL_DISPLAY) {
         newLevelOptimistic += 1;
@@ -146,8 +148,8 @@ export default function Companion() {
     setCompanion(prev => ({
         ...prev,
         kesehatan: newKesehatanOptimistic,
-        exp: newExpRemainderOptimistic,
-        level: newLevelOptimistic,
+        exp: newExpRemainderOptimistic, 
+        level: newLevelOptimistic,      
     }));
 
     try {
@@ -155,6 +157,7 @@ export default function Companion() {
         .from('river_companion')
         .update({
           kesehatan: newKesehatanOptimistic,
+          exp: newExpOptimistic, 
           last_activity: new Date().toISOString(),
         })
         .eq('id', companion.id);
@@ -168,14 +171,11 @@ export default function Companion() {
     } catch (err) {
       setError('Gagal merawat companion: ' + (err.message || 'Unknown error'));
       console.error('Care error:', err);
-      setCompanion(originalCompanion);
+      setCompanion(originalCompanion); 
     } finally {
       setTimeout(() => setIsFeeding(false), 1500);
     }
   };
-
-  // Dihapus: Fungsi getCompanionColor
-  // Warna companion sekarang ditentukan di JSX berdasarkan jenisnya
 
   const getHealthColor = (health) => {
     if (health >= 70) return 'bg-green-500';
@@ -344,12 +344,12 @@ export default function Companion() {
                             <Activity className="text-blue-400" size={16} />
                             Pengalaman
                           </span>
-                          <span className="text-sm font-bold text-gray-200">{companion.exp}/50 EXP</span>
+                          <span className="text-sm font-bold text-gray-200">{companion.exp}/500 EXP</span>
                         </div>
                         <div className="w-full bg-gray-700/50 rounded-full h-2">
                           <div
                             className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
-                            style={{ width: `${(companion.exp / 50) * 100}%` }}
+                            style={{ width: `${(companion.exp / 500) * 100}%` }}
                           />
                         </div>
                       </div>
