@@ -354,14 +354,14 @@ export default function KelolaCompanion() {
                       <div className="mt-4 flex justify-between">
                         <button
                           onClick={() => setEditModal({ open: true, data: comp })}
-                          className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/25 flex items-center space-x-1"
+                          className="px-3 py-1.5 bg-amber-500 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/25 flex items-center space-x-1"
                         >
                           <Edit className="w-4 h-4" />
                           <span>Edit</span>
                         </button>
                         <button
                           onClick={() => handleDelete(comp.id)}
-                          className="px-3 py-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-600/25 flex items-center space-x-1"
+                          className="px-3 py-1.5 bg-red-500 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 bg-red-500 flex items-center space-x-1"
                         >
                           <Trash2 className="w-4 h-4" />
                           <span>Hapus</span>

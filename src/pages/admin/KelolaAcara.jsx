@@ -415,14 +415,14 @@ export default function KelolaAcara() {
                                 <div className="flex flex-col gap-2">
                                   <button
                                     onClick={() => setEditModal({ open: true, data: { ...item, tanggal: item.tanggal.substring(0, 10), waktu: item.waktu ? item.waktu.substring(0, 5) : '' }, newPosterFile: null })}
-                                    className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/25 flex items-center space-x-1 justify-center"
+                                    className="px-3 py-1.5 bg-amber-500  text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:bg-amber-600 flex items-center space-x-1 justify-center"
                                   >
                                     <Edit className="w-4 h-4" />
                                     <span>Edit</span>
                                   </button>
                                   <button
                                     onClick={() => handleDelete(item.id, item.poster_url)}
-                                    className="px-3 py-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-600/25 flex items-center space-x-1 justify-center"
+                                    className="px-3 py-1.5 bg-red-500 text-white rounded-xl text-sm font-medium transition-all duration-300 hover:scale-105 bg-red-500 flex items-center space-x-1 justify-center"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                     <span>Hapus</span>
