@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
-import { Droplets, Users, MapPin, Award, ChevronDown, Play, Camera, Calendar, MessageCircle, Heart } from 'lucide-react'; // Tambah Heart jika dipakai
+import { Droplets, Users, MapPin, Award, ChevronDown, Lock, Camera, Calendar, MessageCircle, Heart } from 'lucide-react'; // Tambah Heart jika dipakai
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -32,10 +32,12 @@ export default function LandingPage() {
             style={{ transform: `translateY(${scrollY * 0.1}px)` }}
           >
 
-            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-md border border-cyan-500/30 rounded-full px-6 py-2 mb-8 animate-pulse">
-              <Droplets className="w-5 h-5 text-cyan-400" />
-              <span className="text-sm font-medium text-cyan-300">Revolusi Pelestarian Sungai Indonesia</span>
-            </div>
+            <div 
+            className="inline-flex items-center space-x-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-md border border-cyan-500/30 rounded-full px-6 py-2 mb-8 mt-16 animate-pulse"
+          >
+            <Droplets className="w-5 h-5 text-cyan-400" />
+            <span className="text-sm font-medium text-cyan-300">Revolusi Pelestarian Sungai Indonesia</span>
+          </div>
 
 
             <h1 className="text-6xl md:text-8xl font-black mb-8 leading-tight">
@@ -66,7 +68,7 @@ export default function LandingPage() {
                 className="group px-8 py-4 bg-slate-800/50 backdrop-blur-md border border-slate-700 rounded-2xl text-lg font-semibold transition-all duration-300 hover:scale-105 hover:bg-slate-700/50 hover:border-cyan-500/50"
               >
                 <span className="flex items-center space-x-2">
-                  <Play className="w-5 h-5" />
+                  <Lock className="w-5 h-5" />
                   <span>Login</span>
                 </span>
               </button>
@@ -108,6 +110,7 @@ export default function LandingPage() {
                 Teknologi canggih yang mengubah cara kita menyelamatkan sungai Indonesia
               </p>
             </div>
+
 
             <div className="grid md:grid-cols-3 gap-8">
               {[
