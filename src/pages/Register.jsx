@@ -143,7 +143,7 @@ export default function Register() {
 
       <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 relative z-10">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
+          <div className="text-center mt-8 mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl mb-6">
               <Droplets className="w-8 h-8 text-white" />
             </div>
