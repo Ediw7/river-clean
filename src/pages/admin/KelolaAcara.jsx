@@ -444,129 +444,129 @@ export default function KelolaAcara() {
 
       <FooterAdmin />
       {editModal.open && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/70 backdrop-blur-sm p-6 rounded-2xl shadow-lg w-full max-w-4xl border border-white/50">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
-                <Edit className="w-5 h-5 text-white" />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
+          <div className="bg-white/90 backdrop-blur-sm p-4 md:p-6 rounded-2xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-white/50">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
+                <Edit className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-800">Edit Acara</h2>
+              <h2 className="text-lg md:text-xl font-semibold text-slate-800">Edit Acara</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Judul</label>
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">Judul</label>
                 <input
                   type="text"
                   value={editModal.data.judul}
                   onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, judul: e.target.value } })}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
+                  className="w-full p-2 md:p-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
                   placeholder="Judul"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Lokasi</label>
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">Lokasi</label>
                 <input
                   type="text"
                   value={editModal.data.lokasi}
                   onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, lokasi: e.target.value } })}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
+                  className="w-full p-2 md:p-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
                   placeholder="Lokasi"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Tanggal</label>
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">Tanggal</label>
                 <input
                   type="date"
                   value={editModal.data.tanggal}
                   onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, tanggal: e.target.value } })}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
+                  className="w-full p-2 md:p-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Waktu (opsional)</label>
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">Waktu (opsional)</label>
                 <input
                   type="time"
                   value={editModal.data.waktu || ''}
                   onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, waktu: e.target.value } })}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
+                  className="w-full p-2 md:p-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Nomor Kontak Person (opsional)</label>
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">Nomor Kontak Person (opsional)</label>
                 <input
                   type="text"
                   value={editModal.data.no_cp || ''}
                   onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, no_cp: e.target.value } })}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
+                  className="w-full p-2 md:p-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
                   placeholder="Contoh: +628123456789"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Link Pendaftaran (Opsional)</label>
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">Link Pendaftaran (Opsional)</label>
                 <input
                   type="url"
                   value={editModal.data.link_pendaftaran || ''}
                   onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, link_pendaftaran: e.target.value } })}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
+                  className="w-full p-2 md:p-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
                   placeholder="URL untuk pendaftaran eksternal"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Poster URL (opsional)</label>
+              <div className="md:col-span-2">
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">Poster URL (opsional)</label>
                 <input
                   type="url"
                   value={editModal.data.poster_url || ''}
                   onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, poster_url: e.target.value } })}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
+                  className="w-full p-2 md:p-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80"
                   placeholder="URL gambar poster"
                 />
-                   <p className="text-xs text-slate-500 mt-1">
-                    Atau upload gambar baru:
+                <p className="text-xs text-slate-500 mt-1">
+                  Atau upload gambar baru:
                 </p>
                 <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setEditModal({ ...editModal, newPosterFile: e.target.files[0] })}
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 mt-2"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEditModal({ ...editModal, newPosterFile: e.target.files[0] })}
+                  className="w-full p-2 md:p-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 mt-2"
                 />
                 {editModal.data.poster_url && !editModal.newPosterFile && (
-                    <div className="mt-2 text-center">
-                        <img src={editModal.data.poster_url} alt="Current Poster" className="max-h-24 mx-auto rounded-lg shadow-md" />
-                        <p className="text-xs text-slate-500 mt-1">Poster saat ini</p>
-                    </div>
+                  <div className="mt-2 text-center">
+                    <img src={editModal.data.poster_url} alt="Current Poster" className="max-h-16 md:max-h-20 mx-auto rounded-lg shadow-md" />
+                    <p className="text-xs text-slate-500 mt-1">Poster saat ini</p>
+                  </div>
                 )}
                 {editModal.newPosterFile && (
-                    <div className="mt-2 text-center">
-                        <img src={URL.createObjectURL(editModal.newPosterFile)} alt="New Poster Preview" className="max-h-24 mx-auto rounded-lg shadow-md" />
-                        <p className="text-xs text-slate-500 mt-1">Pratinjau poster baru</p>
-                    </div>
+                  <div className="mt-2 text-center">
+                    <img src={URL.createObjectURL(editModal.newPosterFile)} alt="New Poster Preview" className="max-h-16 md:max-h-20 mx-auto rounded-lg shadow-md" />
+                    <p className="text-xs text-slate-500 mt-1">Pratinjau poster baru</p>
+                  </div>
                 )}
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-2">Deskripsi (opsional)</label>
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">Deskripsi (opsional)</label>
                 <textarea
                   value={editModal.data.deskripsi || ''}
                   onChange={(e) => setEditModal({ ...editModal, data: { ...editModal.data, deskripsi: e.target.value } })}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 min-h-[120px] resize-none"
+                  className="w-full p-2 md:p-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 min-h-[80px] md:min-h-[100px] resize-none"
                   placeholder="Deskripsi acara"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3 mt-6">
+            <div className="flex justify-end space-x-2 md:space-x-3 mt-4 md:mt-6">
               <button
                 onClick={() => setEditModal({ open: false, data: null, newPosterFile: null })}
-                className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-300"
+                className="px-4 py-2 md:px-6 md:py-3 text-sm md:text-base bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-300"
               >
                 Batal
               </button>
               <button
                 onClick={handleEdit}
-                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
+                className="px-4 py-2 md:px-6 md:py-3 text-sm md:text-base bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
               >
                 Simpan Perubahan
               </button>

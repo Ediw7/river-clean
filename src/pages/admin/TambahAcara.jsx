@@ -58,8 +58,9 @@ export default function TambahAcara() {
     try {
       if (posterFile) {
         const fileExtension = posterFile.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
-        const filePath = `posters/${fileName}`;
+        // PERBAIKAN DI SINI: Gunakan konkatenasi string biasa
+        const fileName = Date.now() + '_' + Math.random().toString(36).substring(2, 15) + '.' + fileExtension;
+        const filePath = 'posters/' + fileName; // PERBAIKAN DI SINI JUGA
 
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('acara-posters')
@@ -79,7 +80,6 @@ export default function TambahAcara() {
         posterUrl = publicUrlData.publicUrl;
       }
 
- 
       const { error: insertError } = await supabase.from('acara_pembersihan').insert([{
         judul: formData.judul,
         lokasi: formData.lokasi,
@@ -90,7 +90,6 @@ export default function TambahAcara() {
         poster_url: posterUrl,
         link_pendaftaran: formData.link_pendaftaran || null, 
         updated_at: new Date().toISOString(),
-       
       }]);
 
       if (insertError) {
@@ -209,6 +208,15 @@ export default function TambahAcara() {
                     onChange={(e) => setFormData({ ...formData, no_cp: e.target.value })}
                     className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80"
                     placeholder="Contoh: +628123456789"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Deskripsi (Opsional)</label>
+                  <textarea
+                    value={formData.deskripsi}
+                    onChange={(e) => setFormData({ ...formData, deskripsi: e.target.value })}
+                    className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 bg-white/80 min-h-[120px] resize-none"
+                    placeholder="Deskripsi acara"
                   />
                 </div>
                 <div>
