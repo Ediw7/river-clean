@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { BookOpen, MessageCircle, Camera, MapPin, LogOut, Menu, X } from 'lucide-react'; 
+import { Droplets,BookOpen, MessageCircle, Camera, MapPin, LogOut, Menu, X } from 'lucide-react'; 
 import { supabase } from '../../lib/supabase';
 import { useState } from 'react'; 
 
@@ -22,7 +22,7 @@ export default function HeaderUser() {
   };
 
   const navItems = [
-    { name: 'Dashboard', icon: BookOpen, path: '/user/dashboard' }, 
+    { name: 'Dashboard', icon: Droplets, path: '/user/dashboard' }, 
     { name: 'Laporan', icon: Camera, path: '/user/laporan' },
     { name: 'Peta', icon: MapPin, path: '/user/peta' },
     { name: 'Acara', icon: BookOpen, path: '/user/acara' },
@@ -40,7 +40,7 @@ export default function HeaderUser() {
       {/* Logo */}
       <div className="flex items-center space-x-3 relative z-10" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
         <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center shadow-md">
-          <BookOpen className="w-6 h-6 text-white" />
+          <Droplets className="w-6 h-6 text-white" />
         </div>
         <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent select-none">
           RiverClean
