@@ -244,15 +244,16 @@ export default function UserDashboard() {
             </div>
 
             {/* Statistik Utama */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12"> 
+          <div className="flex justify-center w-full mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-10xl"> {/* Added max-w-5xl to control overall width on larger screens */}
               {[
                 { label: "Laporan", value: userStats.totalLaporanDiverifikasi, icon: FileText, color: "from-blue-500 to-cyan-500", iconColor: "text-white" },
-                { label: "Event", value: userStats.totalAcara, icon: Calendar, color: "from-purple-500 to-indigo-500", iconColor: "text-white" }, 
-                { label: "Pesan Digital", value: userStats.totalPesanDigital, icon: MessageCircle, color: "from-pink-500 to-rose-500", iconColor: "text-white" } 
+                { label: "Event", value: userStats.totalAcara, icon: Calendar, color: "from-purple-500 to-indigo-500", iconColor: "text-white" },
+                { label: "Pesan Digital", value: userStats.totalPesanDigital, icon: MessageCircle, color: "from-pink-500 to-rose-500", iconColor: "text-white" }
               ].map((stat, index) => (
                 <div key={index} className={`bg-gray-900/40 backdrop-blur-md border border-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group`}>
                   <div className="flex items-center justify-between mb-2">
-                    <div className={`w-10 h-10 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`w-13 h-13 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                       <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
                     </div>
                     <div className="text-3xl font-bold text-white">
@@ -263,6 +264,7 @@ export default function UserDashboard() {
                 </div>
               ))}
             </div>
+          </div>
           </div>
         </section>
 
