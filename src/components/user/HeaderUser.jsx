@@ -22,7 +22,7 @@ export default function HeaderUser() {
   };
 
   const navItems = [
-    { name: 'Dashboard', icon: Droplets, path: '/user/dashboard' }, 
+    { name: 'Dashboard', icon: BookOpen, path: '/user/dashboard' }, 
     { name: 'Laporan', icon: Camera, path: '/user/laporan' },
     { name: 'Peta', icon: MapPin, path: '/user/peta' },
     { name: 'Acara', icon: BookOpen, path: '/user/acara' },
