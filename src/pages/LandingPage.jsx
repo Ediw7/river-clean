@@ -113,50 +113,99 @@ export default function LandingPage() {
 
 
             <div className="grid md:grid-cols-3 gap-8">
-              {[
-                {
-                  title: "📸 Pelaporan Pencemaran",
-                  desc: "Unggah foto, deskripsi, dan lokasi limbah. Laporan diverifikasi oleh admin untuk tindak lanjut.",
-                  icon: Camera,
-                  gradient: "from-red-500/20 to-orange-500/20"
-                },
-                {
-                  title: "🗺️ Peta Sungai Interaktif",
-                  desc: "Visualisasi kondisi sungai dengan kode warna dan heatmap polusi.",
-                  icon: MapPin,
-                  gradient: "from-blue-500/20 to-cyan-500/20"
-                },
-                {
-                  title: "📅 Koordinasi Event",
-                  desc: "Kalender acara pembersihan. Daftar sebagai relawan dan dapatkan notifikasi kegiatan lokal.",
-                  icon: Calendar,
-                  gradient: "from-emerald-500/20 to-green-500/20"
-                },
-                {
-                  title: "💖 River Companion",
-                  desc: "Peliharaan virtual yang tumbuh seiring kontribusi Anda melaporkan dan merawat sungai.",
-                  icon: Heart,
-                  gradient: "from-pink-500/20 to-rose-500/20"
-                },
-                {
-                  title: "💬 Komunitas Digital",
-                  desc: "Kirim pesan dan berdiskusi tentang sungai, membangun rasa komunitas dan kolaborasi.",
-                  icon: MessageCircle,
-                  gradient: "from-purple-500/20 to-indigo-500/20"
-                }
-              ].map((feature, index) => (
-                <div 
-                  key={index}
-                  className={`group p-8 bg-gradient-to-br ${feature.gradient} backdrop-blur-md border border-gray-800/50 rounded-3xl hover:scale-105 transition-all duration-300 hover:border-cyan-500/30`}
-                >
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl mb-4 group-hover:bg-white/20 transition-all duration-300">
-                    <feature.icon className="w-6 h-6 text-cyan-300" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4 text-white">{feature.title}</h3>
-                  <p className="text-slate-300 leading-relaxed">{feature.desc}</p>
-                </div>
-              ))}
+  {[
+    {
+      title: "📸 Pelaporan Pencemaran",
+      desc: "Unggah foto, deskripsi, dan lokasi limbah. Laporan diverifikasi oleh admin untuk tindak lanjut.",
+      icon: Camera,
+      gradient: "from-red-500/20 to-orange-500/20",
+      gridPlacement: "" 
+    },
+    {
+      title: "🗺️ Peta Sungai Interaktif",
+      desc: "Visualisasi kondisi sungai dengan kode warna dan heatmap polusi.",
+      icon: MapPin,
+      gradient: "from-blue-500/20 to-cyan-500/20",
+      gridPlacement: "" 
+    },
+    {
+      title: "📅 Koordinasi Event",
+      desc: "Kalender acara pembersihan. Daftar sebagai relawan dan dapatkan notifikasi kegiatan lokal.",
+      icon: Calendar,
+      gradient: "from-emerald-500/20 to-green-500/20",
+      gridPlacement: "" 
+    },
+    {
+      title: "💖 River Companion",
+      desc: "Peliharaan virtual yang tumbuh seiring kontribusi Anda melaporkan dan merawat sungai.",
+      icon: Heart,
+      gradient: "from-pink-500/20 to-rose-500/20",
+      gridPlacement: "md:col-start-1 md:col-end-4 flex justify-center"
+    },
+    {
+      title: "💬 Komunitas Digital",
+      desc: "Kirim pesan dan berdiskusi tentang sungai, membangun rasa komunitas dan kolaborasi.",
+      icon: MessageCircle,
+      gradient: "from-purple-500/20 to-indigo-500/20",
+      gridPlacement: "" 
+    }
+  ].map((feature, index) => {
+    if (feature.title === "💖 River Companion") {
+      return (
+        <div key={index} className="md:col-start-1 md:col-end-4 flex justify-center gap-8">
+          <div
+            className={`group p-8 bg-gradient-to-br ${feature.gradient} backdrop-blur-md border border-gray-800/50 rounded-3xl hover:scale-105 transition-all duration-300 hover:border-cyan-500/30 w-full md:w-1/3`}
+          >
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl mb-4 group-hover:bg-white/20 transition-all duration-300">
+              <feature.icon className="w-6 h-6 text-cyan-300" />
             </div>
+            <h3 className="text-2xl font-bold mb-4 text-white">{feature.title}</h3>
+            <p className="text-slate-300 leading-relaxed">{feature.desc}</p>
+          </div>
+          
+          {
+            [
+              {
+                title: "💬 Komunitas Digital",
+                desc: "Kirim pesan dan berdiskusi tentang sungai, membangun rasa komunitas dan kolaborasi.",
+                icon: MessageCircle,
+                gradient: "from-purple-500/20 to-indigo-500/20"
+              }
+            ].map((komunitasFeature, komunitasIndex) => (
+              <div
+                key={komunitasIndex}
+                className={`group p-8 bg-gradient-to-br ${komunitasFeature.gradient} backdrop-blur-md border border-gray-800/50 rounded-3xl hover:scale-105 transition-all duration-300 hover:border-cyan-500/30 w-full md:w-1/3`}
+              >
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl mb-4 group-hover:bg-white/20 transition-all duration-300">
+                  <komunitasFeature.icon className="w-6 h-6 text-cyan-300" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-white">{komunitasFeature.title}</h3>
+                <p className="text-slate-300 leading-relaxed">{komunitasFeature.desc}</p>
+              </div>
+            ))
+          }
+        </div>
+      );
+    } else if (feature.title === "💬 Komunitas Digital") {
+      // Jangan render Komunitas Digital di sini karena sudah dirender bersama River Companion
+      return null;
+    } else {
+      // Render card lainnya seperti biasa
+      return (
+        <div
+          key={index}
+          className={`group p-8 bg-gradient-to-br ${feature.gradient} backdrop-blur-md border border-gray-800/50 rounded-3xl hover:scale-105 transition-all duration-300 hover:border-cyan-500/30 ${feature.gridPlacement}`}
+        >
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl mb-4 group-hover:bg-white/20 transition-all duration-300">
+            <feature.icon className="w-6 h-6 text-cyan-300" />
+          </div>
+          <h3 className="text-2xl font-bold mb-4 text-white">{feature.title}</h3>
+          <p className="text-slate-300 leading-relaxed">{feature.desc}</p>
+        </div>
+      );
+    }
+  })}
+</div>
           </div>
         </section>
 
