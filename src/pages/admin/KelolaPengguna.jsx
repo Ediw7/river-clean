@@ -122,7 +122,7 @@ export default function KelolaPengguna() {
           <div className="max-w-6xl mx-auto">
             {/* Header Section */}
             <div className="mb-8">
-              <div className="flex items-center space-x-3 mb-4">
+              <div className="flex items-center space-x-3 mt-4 mb-4">
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
                   <Users className="w-6 h-6 text-white" />
                 </div>
