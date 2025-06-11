@@ -14,16 +14,21 @@ import {
   Image,
   AlertTriangle,
   Send,
+  Search, // Import Search
+  Filter, // Import Filter
 } from 'lucide-react';
 
 export default function KelolaLaporan() {
   const navigate = useNavigate();
   const [laporan, setLaporan] = useState([]);
+  const [displayedLaporan, setDisplayedLaporan] = useState([]); // State untuk data yang ditampilkan setelah filter/sort
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editModal, setEditModal] = useState({ open: false, data: null });
   const [noteModal, setNoteModal] = useState({ open: false, data: null, note: '' });
   const [followUpModal, setFollowUpModal] = useState({ open: false, data: null, followUp: '' });
+  const [searchTerm, setSearchTerm] = useState(''); // State untuk search
+  const [sortBy, setSortBy] = useState('created_at'); // State untuk sort
 
   const fetchLaporan = useCallback(async () => {
     try {
@@ -56,6 +61,7 @@ export default function KelolaLaporan() {
 
       console.log('Data laporan berhasil dimuat:', data);
       setLaporan(data || []);
+      setDisplayedLaporan(data || []); // Inisialisasi data yang ditampilkan
     } catch (err) {
       console.error('Error detail fetchLaporan:', err);
       setError('Gagal memuat laporan: ' + (err.message || 'Unknown error'));
@@ -105,33 +111,30 @@ export default function KelolaLaporan() {
     checkAuthAndFetch();
   }, [navigate, fetchLaporan]);
 
-  const fetchLaporanWithFilter = async (statusFilter = null) => {
-    try {
-      let query = supabase
-        .from('laporan_pencemaran')
-        .select(
-          `
-            id, nama, email, whatsapp_number, deskripsi, lokasi, jenis_sampah,
-            foto_path, status, catatan_admin, tindak_lanjut, sent_to_team, created_at, updated_at
-          `
-        )
-        .order('created_at', { ascending: false });
+  // Logika filter dan sort
+  useEffect(() => {
+    let filtered = laporan;
 
-      if (statusFilter) {
-        query = query.eq('status', statusFilter);
-      }
-
-      const { data, error } = await query;
-      if (error) {
-        console.error('Supabase error saat memuat laporan dengan filter:', error);
-        throw error;
-      }
-      setLaporan(data || []);
-    } catch (err) {
-      console.error('Error detail fetchLaporanWithFilter:', err);
-      setError('Gagal memuat laporan: ' + (err.message || 'Unknown error'));
+    if (searchTerm) {
+      filtered = filtered.filter((item) =>
+        item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.lokasi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.deskripsi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.jenis_sampah.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
-  };
+
+    if (sortBy === 'created_at') {
+      filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } else if (sortBy === 'nama') {
+      filtered.sort((a, b) => (a.nama || '').localeCompare(b.nama || ''));
+    } else if (sortBy === 'lokasi') {
+      filtered.sort((a, b) => (a.lokasi || '').localeCompare(b.lokasi || ''));
+    }
+    setDisplayedLaporan(filtered);
+  }, [searchTerm, sortBy, laporan]);
+
 
   const handleStatusChange = async (id, newStatus) => {
     const originalLaporan = [...laporan];
@@ -155,8 +158,8 @@ export default function KelolaLaporan() {
       }
 
       if (originalItem.whatsapp_number && newStatus !== 'menunggu') {
-        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nStatus laporan Anda (ID: ${id}) telah diperbarui menjadi: *${newStatus}*.`;
-        const whatsappUrl = `https://wa.me/${originalItem.whatsapp_number.replace('+', '')}?text=${encodeURIComponent(message)}`;
+        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nStatus laporan Anda (ID: <span class="math-inline">\{id\}\) telah diperbarui menjadi\: \*</span>{newStatus}*.`;
+        const whatsappUrl = `https://wa.me/<span class="math-inline">\{originalItem\.whatsapp\_number\.replace\('\+', ''\)\}?text\=</span>{encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
       }
     } catch (err) {
@@ -168,7 +171,6 @@ export default function KelolaLaporan() {
   const handleDelete = async (id, fotoPath) => {
     if (window.confirm('Yakin ingin menghapus laporan ini?')) {
       const originalLaporan = [...laporan];
- 
       setLaporan((prevLaporan) => prevLaporan.filter((item) => item.id !== id));
 
       try {
@@ -244,8 +246,8 @@ export default function KelolaLaporan() {
       }
 
       if (originalItem.whatsapp_number) {
-        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nCatatan admin untuk laporan Anda (ID: ${id}): *${note}*.\nStatus laporan Anda saat ini: *${originalItem.status}*.`;
-        const whatsappUrl = `https://wa.me/${originalItem.whatsapp_number.replace('+', '')}?text=${encodeURIComponent(message)}`;
+        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nCatatan admin untuk laporan Anda (ID: <span class="math-inline">\{id\}\)\: \*</span>{note}*.\nStatus laporan Anda saat ini: *${originalItem.status}*.`;
+        const whatsappUrl = `https://wa.me/<span class="math-inline">\{originalItem\.whatsapp\_number\.replace\('\+', ''\)\}?text\=</span>{encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
       }
     } catch (err) {
@@ -278,8 +280,8 @@ export default function KelolaLaporan() {
       }
 
       if (originalItem.whatsapp_number) {
-        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nTindak lanjut terbaru untuk laporan Anda (ID: ${id}): *${followUp}*.\nStatus laporan Anda saat ini: *${originalItem.status}*.`;
-        const whatsappUrl = `https://wa.me/${originalItem.whatsapp_number.replace('+', '')}?text=${encodeURIComponent(message)}`;
+        const message = `Halo ${originalItem.nama || 'Pelapor'},\n\nTindak lanjut terbaru untuk laporan Anda (ID: <span class="math-inline">\{id\}\)\: \*</span>{followUp}*.\nStatus laporan Anda saat ini: *${originalItem.status}*.`;
+        const whatsappUrl = `https://wa.me/<span class="math-inline">\{originalItem\.whatsapp\_number\.replace\('\+', ''\)\}?text\=</span>{encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
       }
     } catch (err) {
@@ -310,7 +312,7 @@ export default function KelolaLaporan() {
         : 'Tidak ada foto';
 
       const message = `*Laporan Pencemaran Baru untuk Tindak Lanjut*\n\n*ID Laporan:* ${id}\n*Lokasi:* ${item.lokasi}\n*Deskripsi:* ${item.deskripsi}\n*Jenis Sampah:* ${item.jenis_sampah}\n*Foto:* ${imageUrl}\n\n*Mohon segera ditindaklanjuti oleh tim lapangan.*`;
-      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+      const whatsappUrl = `https://wa.me/<span class="math-inline">\{phoneNumber\}?text\=</span>{encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');
 
       const { error } = await supabase
@@ -373,6 +375,21 @@ export default function KelolaLaporan() {
               </div>
             </div>
 
+            {/* Search and Sort */}
+            <div className="mb-6 flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Cari nama, email, lokasi, atau jenis sampah..."
+                  className="w-full pl-10 pr-4 py-2 bg-white/80 border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                />
+              </div>
+            
+            </div>
+
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center">
@@ -382,7 +399,7 @@ export default function KelolaLaporan() {
               </div>
             ) : (
               <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg overflow-hidden">
-                {laporan.length === 0 ? (
+                {displayedLaporan.length === 0 ? (
                   <div className="text-center py-16">
                     <div className="w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                       <FileText className="w-8 h-8 text-cyan-600" />
@@ -391,7 +408,7 @@ export default function KelolaLaporan() {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-slate-200"> 
+                    <table className="min-w-full divide-y divide-slate-200">
                       <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
                         <tr>
                           <th scope="col" className="p-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Nama Pelapor</th>
@@ -409,7 +426,7 @@ export default function KelolaLaporan() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-slate-100">
-                        {laporan.map((item, index) => {
+                        {displayedLaporan.map((item, index) => {
                           const displayFotoPath = item.foto_path && item.foto_path.startsWith('public/')
                             ? item.foto_path.substring('public/'.length)
                             : item.foto_path;
@@ -417,7 +434,7 @@ export default function KelolaLaporan() {
                           return (
                             <tr
                               key={item.id}
-                              className={`hover:bg-gradient-to-r hover:from-cyan-50/30 hover:to-blue-50/30 transition-all duration-300 ${
+                              className={`border-b border-slate-100 hover:bg-slate-50 transition-all duration-300 ${
                                 index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
                               }`}
                             >
@@ -429,13 +446,12 @@ export default function KelolaLaporan() {
                                   {item.deskripsi}
                                 </div>
                               </td>
-                              <td className="p-4 text-slate-700 whitespace-nowrap">
-                                <div className="flex items-center space-x-2"> 
+                              <td className="p-4 text-slate-700">
+                                <div className="flex items-center space-x-2 whitespace-nowrap">
                                   <MapPin className="w-4 h-4 text-slate-500" />
                                   <span>{item.lokasi}</span>
                                 </div>
                               </td>
-
                               <td className="p-4 whitespace-nowrap">
                                 <span className="inline-flex px-3 py-1 bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-700 rounded-full text-sm font-medium">
                                   {item.jenis_sampah}
@@ -466,7 +482,7 @@ export default function KelolaLaporan() {
                               </td>
                               <td className="p-4 whitespace-nowrap">
                                 <div className="flex flex-col space-y-2">
-                                  {item.status === 'menunggu' && (
+                                  {item.status === 'menunggu' ? (
                                     <>
                                       <button
                                         onClick={() => handleStatusChange(item.id, 'diverifikasi')}
@@ -483,8 +499,7 @@ export default function KelolaLaporan() {
                                         <span>Tolak</span>
                                       </button>
                                     </>
-                                  )}
-                                  {item.status !== 'menunggu' && (
+                                  ) : (
                                     <span
                                       className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
                                         item.status === 'diverifikasi'
@@ -638,77 +653,77 @@ export default function KelolaLaporan() {
         </div>
       )}
 
-      {noteModal.open && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
-                <StickyNote className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="text-xl font-semibold text-slate-800">Tambah Catatan Admin</h2>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Catatan</label>
-              <textarea
-                value={noteModal.note}
-                onChange={(e) => setNoteModal({ ...noteModal, note: e.target.value })}
-                className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 min-h-[120px] resize-none"
-                placeholder="Masukkan catatan admin..."
-              />
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setNoteModal({ open: false, data: null, note: '' })}
-                className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-300"
-              >
-                Batal
-              </button>
-              <button
-                onClick={() => handleAddNote(noteModal.data.id, noteModal.note)}
-                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
-              >
-                Simpan
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {noteModal.open && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+                <StickyNote className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-xl font-semibold text-slate-800">Tambah Catatan Admin</h2>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Catatan</label>
+              <textarea
+                value={noteModal.note}
+                onChange={(e) => setNoteModal({ ...noteModal, note: e.target.value })}
+                className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 min-h-[120px] resize-none"
+                placeholder="Masukkan catatan admin..."
+              />
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setNoteModal({ open: false, data: null, note: '' })}
+                className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-300"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => handleAddNote(noteModal.data.id, noteModal.note)}
+                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {followUpModal.open && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
-                <StickyNote className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="text-xl font-semibold text-slate-800">Tambah Tindak Lanjut</h2>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Tindak Lanjut</label>
-              <textarea
-                value={followUpModal.followUp}
-                onChange={(e) => setFollowUpModal({ ...followUpModal, followUp: e.target.value })}
-                className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 min-h-[120px] resize-none"
-                placeholder="Masukkan status tindak lanjut..."
-              />
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setFollowUpModal({ open: false, data: null, followUp: '' })}
-                className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-300"
-              >
-                Batal
-              </button>
-              <button
-                onClick={() => handleAddFollowUp(followUpModal.data.id, followUpModal.followUp)}
-                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
-              >
-                Simpan
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+      {followUpModal.open && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full max-w-md border border-white/50">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
+                <StickyNote className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-xl font-semibold text-slate-800">Tambah Tindak Lanjut</h2>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Tindak Lanjut</label>
+              <textarea
+                value={followUpModal.followUp}
+                onChange={(e) => setFollowUpModal({ ...followUpModal, followUp: e.target.value })}
+                className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300 bg-white/80 min-h-[120px] resize-none"
+                placeholder="Masukkan status tindak lanjut..."
+              />
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setFollowUpModal({ open: false, data: null, followUp: '' })}
+                className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:bg-slate-300"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => handleAddFollowUp(followUpModal.data.id, followUpModal.followUp)}
+                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
